@@ -1,0 +1,13 @@
+Day 1: 
+- Immediate action : Color detection, contour, create a box using coordinate, and print("Turning right or left")
+
+Core Operations with OpenCV - Basic Reviews 
+- 
+
+
+
+Things to study: 
+- PD Steering 
+- Thresholding function to mask feed 
+- LAB to define color mask 
+- What is a threshold_trackbar( )
