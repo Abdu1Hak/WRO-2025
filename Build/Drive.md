@@ -1,5 +1,5 @@
 # Drive
-The drive system that powers are robot is a simple, elegant design whose concept was created from the start with simple improvements made throughout testing without major overhauls, therefore the different designs will go upwards from V0.
+The drive system that powers are robot is a simple, elegant design whose concept was created from the start with simple improvements made throughout testing without major overhauls, therefore the different designs will go upwards from V0.0.
 
 ## V0.0
 Features:
