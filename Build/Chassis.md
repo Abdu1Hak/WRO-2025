@@ -24,7 +24,7 @@ Issues:
 Fixes:
   - Cutout at rear designed to accomdate the lowering of the differential (Drive V0.1).
   - Rectangular feature added for servo to sit within.
-  - Screw holes added on each corner of main chassis section for a second storey which will house the Rasberry Pi, battery, and camera.
+  - Screw holes added on each corner of main chassis section for a second storey which will house the Rasberry Pi, battery, and camera (Second Storey V0.0).
 
 Issues:
   - No room for servo wire.
