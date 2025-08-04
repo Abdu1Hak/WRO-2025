@@ -14,6 +14,7 @@ Issues:
 Features:
   - Plate designed to sit upon VEX Standoffs that will attach directly to Chassis (Chassis V1.1).
   - Atop plate sits a holder for Rasberry Pi.
+  - 
 Issues:
   - Not enough room for battery, hence Chassis V1.3.
 
