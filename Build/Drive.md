@@ -30,9 +30,11 @@ Issues:
       Increased strain on motor
       Increased likeliness for axle adapter to break/fracture
       Increased waste of power
+  - Lack of grip from short wheels.
 ## V0.3
 Fixes:
   - Redesigned slot within axle suports to fit ball bearings for axle adapters to fit through in order to reduce friction.
+  - Taller wheels attached to increase grip and top speed.
     
 Issues:
   - N/A
