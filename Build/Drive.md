@@ -9,7 +9,7 @@ Features:
   - Adapters to convert differential output into LEGO axles in order to utilize LEGO tires
     
 Issues:
-  - Differential is mounted too high, therefore we are forced to use overly-large tires.
+  - Differential is mounted too high, hence we are forced to use overly-large tires.
 
 ## V0.1
 Fixes:
