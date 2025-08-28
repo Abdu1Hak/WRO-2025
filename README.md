@@ -97,6 +97,8 @@ def detect_contours(contour, ROI, frame)
 #### PD Steering
    Our main strategy for autonomous travel was to use proportional derivative control with a wide-angle camera, a FOV of 170 degrees. In the open challenge, the only components visible to the camera were the two parallel inner and outer walls, as well as the colored lines indicating a turn. The code begins by measuring how many contours are present in the ROI (Region of Interest) for both walls, and by calculating the area of these contours, it becomes a means of determining how much of the walls are visible to the camera. By calculating the difference between the left and right walls based on the contours on either side, which is again based on the horizontal position of the car, we can determine how far we are from the desired trajectory. This area difference, also known as Cross Track Error (Ep), would be multiplied by a scaling factor called the proportional gain, which would result in a steering angle. Overall, the gain that would satisfy the requirements of our vehicle would be 0.005, and this value is subject to change. The main reason why our value is so small is that the servo's range of movement is between -25 degrees (far left) and 25 degrees (far right), and our car is relatively slow. 
 
+INSERT PICTURE HERE
+
 ```python
 # Proportional and derivative gains
 kp = 0.005
@@ -157,9 +159,90 @@ if counter == 12 and (abs(angle) - MID_SERVO) <= 3:
 ```
 
 ### Obstacle:
-Where do we pick back up from the open challenge code?
-How do we avoid obstacles? and handle different cases
-How do we turn the car with obstacles on the field?
+
+#### Pillar Detection and Maneuvering 
+
+When a frame is captured and converted to HSV, the first pillar-related step is to extract color-specific contours from the forward-looking ROI. 
+```python
+cListPillarGreen = get_contours(ROI_MAIN, hsv, rGreen)
+cListPillarRed, dilate = get_red_contours(ROI_MAIN, hsv, rRed, rRed2)
+```
+
+These raw contours are filtered into potential candidates with the function ``` filter_pillars() ``` that enforces a minimum area and computes geometric values for each pillar: center x, top y, height, and distance. This distance prefers pillars that are lower in the image and near the camera center.  Then these pillars must pass short logical filters. We ignore pillars if it is not the closest pillar (to avoid multiple pillars being detected). A pillar is marked passed if it has moved past a horizontal target zone ```python if pillar["x"] < redTarget ``` or mark it 'too far' if the bottom ```python pillar["y"] + pillar["h"]``` is above a soft distance threshold (< 155) which indicates the pillar is still far vertically. Only when these conditions are passed will the dictionary below be appended as the 'closest pillar'.
+
+```python
+{
+  "x": x + w // 2,
+  "y": y,
+  "h": h,
+  "w": w,
+  "area": area,
+  "distance": pillar_distance
+}
+```
+Depending on the color of the pillar candidate, the code attempts to align a target x-column to the detected pillar. This selection ensures area gating so the robot only targets clearly seen pillars. Green pillars are aligned to the far-right target so the car can pass from the left whereas red pillars are aligned to the far-left target so the car can pass from the right of it. 
+
+```python
+if closest_pillar_color == "red" and closest_pillar_area > Red_grac_const:
+    target = redTarget      # e.g. 50 (left side)
+elif closest_pillar_color == "green" and closest_pillar_area > Green_grav_const:
+    target = greenTarget    # e.g. 620 (right side)
+else:
+    target = 0              # no pillar target, fall back to wall logic
+```
+
+The actual steering is likewise PD-based and computed from the horizontal difference between the pillar center and the selected target value. The code builds an error and derivative term as: 
+
+```python
+pillar_error = abs(target - closest_pillar_x)
+derivative_term = pillar_error - prev_pillar_error
+angle = int(default_servo + (kp * pillar_error) + (kd * derivative_term))
+angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
+```
+
+The sign/direction is restored when issuing a servo command by inverting the angle sign for green pillars. So the logic flow is: 
+
+Calculate difference between pillar and target_x --> Calculate PD angle --> map sign according to pillar --> enqueue to the servo
+
+ There are safety and context checks around pillar following. The code executes pillar following only if a candidate pillar is selected and not too close to the wall. The areaLeft and areaRight checks prevent the robot from weaving away from the pillar when the adjacent wall is already too close. Pillar following is also not executed if we are currently in a left or right turn. 
+
+```python
+if pillar_detected == True and not (closest_pillar_color == "green" and areaLeft >= 11000) and not (closest_pillar_color == "red" and areaRight >= 11000) and not (turn_Dir == "right" or turn_Dir == "left'):
+    # pillar following & possible backtrack
+
+```
+
+#### Backtracking
+
+If the robot is too close to a pillar where further turning could result in a collision, the code triggers a non-blocking backtrack to create enough room between the pillar and car to successfully maneauver around it.  ```backtrack_active``` and ```backtrack_end_time``` manage a timed reverse: the loop continues sensing while the robot reverses, and when the timer expires another block of sets the drive to active (```motor_command_queue.put("drive")```). This is a practical, time-limited evasive action to avoid late collisions. 
+
+```python
+if (closest_pillar_color == "green" and areaGreenCenter > 4000) or (closest_pillar_color == "red" and areaRedCenter > 4000):
+    if not backtrack_active:
+        backtrack_active = True
+        backtrack_end_time = time.time() + backtrack_duration
+        servo_angle_queue.put(0)              # slight straighten
+        motor_command_queue.put("backtrack")  # reverse now
+        servo_angle_queue.put(0)
+
+```
+
+#### Toggling between Pillar Following and Wall Following
+
+if no pillar is actionable (either pillar_detected is false or the safety conditions fail), the code falls back into wall following PD to center the car between the walls once again. This is specifically needed once a manuever has been completed. In logic, Pillar following overrides wall PD when valid; otherwise fall back to PD control steering.
+
+```python
+wall_error = areaLeft - areaRight
+wall_derivative_term = wall_error - prev_wall_error
+angle = int(default_servo + (wall_error * kp_walls) + (wall_derivative_term * kd_walls))
+angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
+servo_angle_queue.put(angle)
+```
+
+#### Turning with Obstacles in the way - WAIT
+
+When ``` areaLineBlue ``` or ``` areaLineOrange ``` exceeds a threshold, the robot recognizes a visible turn marker. The loop will decide on a turn when there is currently no active track direction and the system is ready to accept a new line ``` line_released = True ```
+
 
 ### Parking:
 How do we leave the parking, and how do we understand direction?
