@@ -9,7 +9,7 @@ Things to consider as part of the README file:
 3. Our approach - general to focused, discussions, challenges, goal - issues we faced
 4. Mobility Management - motors, chassi design, mounting of all components. speed, torque, power, etc - 3D - issues we faced
 5. Power and Sense Management- camera, servos, battery, hat, their usage and what they do - issues we faced
-6. Obstacle Management - how they interact with components, strategy of open and obstacle, parking,  program flow, conditions, logic diagrams, code blocks, and commmented code - issues we faced during the coding
+6. Obstacle Management - how they interact with components, strategy of open and obstacle, parking,  program flow, conditions, logic diagrams, code blocks, and commented code - issues we faced during the coding
 7. Assembly Instructions
 8. Improvements
 
@@ -39,7 +39,7 @@ Identify the Logic flow, including code snippets, and provide pictures of the VN
 
    Our primary method of interfacing with the Raspberry Pi to monitor the camera feed was through RealVNC, establishing a wireless connection between the Pi and our system on the same network. By accessing the Pi’s IP address, we were able to mirror its desktop environment directly on our screen. While this approach initially introduced little overhead, performance bottlenecks quickly emerged, primarily in the form of latency and memory limitations.
 
-   When running our open challenge code, we observed frame rates dropping to between 0–5 FPS. The root cause was the Pi’s limited 2 GB of RAM, which could not simultaneously handle intensive video processing and real-time motor control. To resolve this, we restructured execution by assigning tasks to separate CPU cores using threading: one core dedicated to motor commands, another to servo operations, and a third to managing the camera feed. This distribution of workload significantly reduced contention and stabilized performance, resulting in a consistent throughput of approximately 30 FPS. 
+   When running our open challenge code, we observed frame rates dropping to between 0 and 5 FPS. The root cause was the Pi’s limited 2 GB of RAM, which could not simultaneously handle intensive video processing and real-time motor control. To resolve this, we restructured execution by assigning tasks to separate CPU cores using threading: one core dedicated to motor commands, another to servo operations, and a third to managing the camera feed. This distribution of workload significantly reduced contention and stabilized performance, resulting in a consistent throughput of approximately 30 FPS. 
 
 ```python
 import threading
@@ -158,7 +158,7 @@ if counter == 12 and (abs(angle) - MID_SERVO) <= 3:
    motor_command_queue.put("stop")
 ```
 
-### Obstacle:
+### Obstacle Challenge:
 
 #### Pillar Detection and Maneuvering 
 
@@ -168,7 +168,7 @@ cListPillarGreen = get_contours(ROI_MAIN, hsv, rGreen)
 cListPillarRed, dilate = get_red_contours(ROI_MAIN, hsv, rRed, rRed2)
 ```
 
-These raw contours are filtered into potential candidates with the function ``` filter_pillars() ``` that enforces a minimum area and computes geometric values for each pillar: center x, top y, height, and distance. This distance prefers pillars that are lower in the image and near the camera center.  Then these pillars must pass short logical filters. We ignore pillars if it is not the closest pillar (to avoid multiple pillars being detected). A pillar is marked passed if it has moved past a horizontal target zone ```python if pillar["x"] < redTarget ``` or mark it 'too far' if the bottom ```python pillar["y"] + pillar["h"]``` is above a soft distance threshold (< 155) which indicates the pillar is still far vertically. Only when these conditions are passed will the dictionary below be appended as the 'closest pillar'.
+These raw contours are filtered into potential candidates with the function ``` filter_pillars() ``` that enforces a minimum area and computes geometric values for each pillar: center x, top y, height, and distance. This distance prefers pillars that are lower in the image and near the camera center.  Then these pillars must pass short logical filters. We ignore pillars if it is not the closest pillar (to avoid multiple pillars being detected). A pillar is marked passed if it has moved past a horizontal target zone ```python if pillar["x"] < redTarget ``` or mark it 'too far' if the bottom ```python pillar["y"] + pillar["h"]``` is above a soft distance threshold (< 155) which indicates the pillar is still far vertically. Only when these conditions are met will the dictionary below be appended as the 'closest pillar'.
 
 ```python
 {
@@ -180,7 +180,7 @@ These raw contours are filtered into potential candidates with the function ``` 
   "distance": pillar_distance
 }
 ```
-Depending on the color of the pillar candidate, the code attempts to align a target x-column to the detected pillar. This selection ensures area gating so the robot only targets clearly seen pillars. Green pillars are aligned to the far-right target so the car can pass from the left whereas red pillars are aligned to the far-left target so the car can pass from the right of it. 
+Depending on the color of the pillar candidate, the code attempts to align a target x-column to the detected pillar. This selection ensures area gating so the robot only targets clearly seen pillars. Green pillars are aligned to the far-right target so the car can pass from the left, whereas red pillars are aligned to the far-left target so the car can pass from the right of it. 
 
 ```python
 if closest_pillar_color == "red" and closest_pillar_area > Red_grac_const:
@@ -191,7 +191,7 @@ else:
     target = 0              # no pillar target, fall back to wall logic
 ```
 
-The actual steering is likewise PD-based and computed from the horizontal difference between the pillar center and the selected target value. The code builds an error and derivative term as: 
+The actual steering is likewise PD-based and computed from the horizontal difference between the pillar center and the selected target value. The code builds an error and a derivative term as: 
 
 ```python
 pillar_error = abs(target - closest_pillar_x)
@@ -202,9 +202,8 @@ angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
 
 The sign/direction is restored when issuing a servo command by inverting the angle sign for green pillars. So the logic flow is: 
 
-Calculate difference between pillar and target_x --> Calculate PD angle --> map sign according to pillar --> enqueue to the servo
 
- There are safety and context checks around pillar following. The code executes pillar following only if a candidate pillar is selected and not too close to the wall. The areaLeft and areaRight checks prevent the robot from weaving away from the pillar when the adjacent wall is already too close. Pillar following is also not executed if we are currently in a left or right turn. 
+ There are safety and context checks around pillar following. The code executes the pillar following only if a candidate pillar is selected and not too close to the wall. The areaLeft and areaRight checks prevent the robot from weaving away from the pillar when the adjacent wall is already too close. Pillar following is also not executed if we are currently in a left or right turn. 
 
 ```python
 if pillar_detected == True and not (closest_pillar_color == "green" and areaLeft >= 11000) and not (closest_pillar_color == "red" and areaRight >= 11000) and not (turn_Dir == "right" or turn_Dir == "left'):
@@ -214,7 +213,7 @@ if pillar_detected == True and not (closest_pillar_color == "green" and areaLeft
 
 #### Backtracking
 
-If the robot is too close to a pillar where further turning could result in a collision, the code triggers a non-blocking backtrack to create enough room between the pillar and car to successfully maneauver around it.  ```backtrack_active``` and ```backtrack_end_time``` manage a timed reverse: the loop continues sensing while the robot reverses, and when the timer expires another block of sets the drive to active (```motor_command_queue.put("drive")```). This is a practical, time-limited evasive action to avoid late collisions. 
+If the robot is too close to a pillar where further turning could result in a collision, the code triggers a non-blocking backtrack to create enough room between the pillar and the car to successfully maneuver around it.  ```backtrack_active``` and ```backtrack_end_time``` manage a timed reverse: the loop continues sensing while the robot reverses, and when the timer expires, another block sets the drive to active (```motor_command_queue.put("drive")```). This is a practical, time-limited evasive action to avoid late collisions. 
 
 ```python
 if (closest_pillar_color == "green" and areaGreenCenter > 4000) or (closest_pillar_color == "red" and areaRedCenter > 4000):
@@ -229,7 +228,7 @@ if (closest_pillar_color == "green" and areaGreenCenter > 4000) or (closest_pill
 
 #### Toggling between Pillar Following and Wall Following
 
-if no pillar is actionable (either pillar_detected is false or the safety conditions fail), the code falls back into wall following PD to center the car between the walls once again. This is specifically needed once a manuever has been completed. In logic, Pillar following overrides wall PD when valid; otherwise fall back to PD control steering.
+If no pillar is actionable (either pillar_detected is false or the safety conditions fail), the code falls back into wall following PD to center the car between the walls once again. This is specifically needed once a maneuver has been completed. In logic, Pillar following overrides wall PD when valid; otherwise, fall back to PD control steering.
 
 ```python
 wall_error = areaLeft - areaRight
@@ -241,14 +240,17 @@ servo_angle_queue.put(angle)
 
 #### Turning with Obstacles in the way - WAIT
 
-When ``` areaLineBlue ``` or ``` areaLineOrange ``` exceeds a threshold, the robot recognizes a visible turn marker. The loop will decide on a turn when there is currently no active track direction and the system is ready to accept a new line ``` line_released = True ```
+When ``` areaLineBlue ``` or ``` areaLineOrange ``` exceeds a threshold, the robot recognizes a visible turn marker. The loop will decide on a turn when there is currently no active track direction and the system is ready to accept a new line, ``` line_released = True ```
 
 
 ### Parking:
 How do we leave the parking, and how do we understand direction?
 How do we enter the parking spot after 3 rounds?
-How do we manage color detection between red pillars and magenta parking lot walls.
+How do we manage color detection between red pillars and magenta parking lot walls?
 
+### Flow Diagram:
+
+<img width="791" height="652" alt="image" src="https://github.com/user-attachments/assets/2f230ded-b8f1-44ba-b78e-60dafe4bf03d" />
 
 
 ## 7. Assembly 
