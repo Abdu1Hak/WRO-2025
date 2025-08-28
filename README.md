@@ -35,22 +35,69 @@ Considering our skill set - what areas did we prioritize, beginning challenges, 
 
 Identify the Logic flow, including code snippets, and provide pictures of the VNC
 
-### Using VNC
+### Using VNC - Connecting to the PI
 
-Our primary method of interfacing with the Raspberry Pi to monitor the camera feed was through RealVNC, establishing a wireless connection between the Pi and our system on the same network. By accessing the Pi’s IP address, we were able to mirror its desktop environment directly on our screen. While this approach initially introduced little overhead, performance bottlenecks quickly emerged, primarily in the form of latency and memory limitations.
+   Our primary method of interfacing with the Raspberry Pi to monitor the camera feed was through RealVNC, establishing a wireless connection between the Pi and our system on the same network. By accessing the Pi’s IP address, we were able to mirror its desktop environment directly on our screen. While this approach initially introduced little overhead, performance bottlenecks quickly emerged, primarily in the form of latency and memory limitations.
 
-When running our open challenge code, we observed frame rates dropping to between 0–5 FPS. The root cause was the Pi’s limited 2 GB of RAM, which could not simultaneously handle intensive video processing and real-time motor control. To resolve this, we restructured execution by assigning tasks to separate CPU cores using threading: one core dedicated to motor commands, another to servo operations, and a third to managing the camera feed. This distribution of workload significantly reduced contention and stabilized performance, resulting in a consistent throughput of approximately 30 FPS. 
+   When running our open challenge code, we observed frame rates dropping to between 0–5 FPS. The root cause was the Pi’s limited 2 GB of RAM, which could not simultaneously handle intensive video processing and real-time motor control. To resolve this, we restructured execution by assigning tasks to separate CPU cores using threading: one core dedicated to motor commands, another to servo operations, and a third to managing the camera feed. This distribution of workload significantly reduced contention and stabilized performance, resulting in a consistent throughput of approximately 30 FPS. 
+
+```python
+import threading
+from queue import Queue
+...
+motor_command_queue = Queue()
+servo_angle_queue = Queue()
+...
+t1 = threading.Thread(target=motor_drive, name='t1')
+t2 = threading.Thread(target=servo_move, name='t2')
+```
 
 
 ### Open Challenge
 
-Our main strategy for autonomous travel was to use proportional derivative control with a wide-angle camera, a FOV of 170 degrees. In the open challenge, the only components visible to the camera were the two parallel inner and outer walls, as well as the colored lines indicating a turn. The code begins by measuring how many contours are present in the ROI (Region of Interest) for both walls, and by calculating the area of these contours, it becomes a means of determining how much of the walls are visible to the camera. By calculating the difference between the left and right walls based on the contours on either side, which is again based on the horizontal position of the car, we can determine how far we are from the desired trajectory. This area difference, also known as Cross Track Error (Ep), would be multiplied by a scaling factor called the proportional gain, which would result in a steering angle. Overall, the gain that would satisfy the requirements of our vehicle would be 0.005, and this value is subject to change. The main reason why our value is so small is that the servo's range of movement is between -25 degrees (far left) and 25 degrees (far right), and our car is relatively slow. 
+Structure Breakdown:
+Wall detection - rois, contours, masking, color ranges
+Steering 
+Turning
+#### Wall Detection
+The car begins by initializing the PiCamera2, giving us a continuous video feed which will later be processed for color detection and contour tracking. Inside the main loop, we capture the frame and convert the RGB image to HSV (a color model that separates hue from brightness), which is required for accurate color masking. 
 
-With proportional control, if the car only sees a single wall, it can enter the center line (center of both walls) crookedly. The result of this is that the controller will repeatedly overshoot the actual desired trajectory and not actually follow it. To correct this overshooting problem, we consider additional error measurements to update our steering command. The Derivative term  allows us to understand how fast we are moving in a perpendicular direction with respect to the desired trajectory. If the cross-track error is a low figure, or 0, it means we are perfectly following the desired trajectory. So by calculating the difference between our current area difference to the previous area difference, we get our derivative term, which likewise is subject to a derivative gain, allowing us to eventually close that overshooting gap in the instance that the car follows a zig-zag pattern. To prevent cases where our car would underdamp or overdamp, our team would continuously test different numerical figures and would eventually settle on 0.0004. This would allow our slow car to perfectly navigate the rounds smoothly without overshooting or underdamping because of this robust algorithm to determine the best angle
+```python
+frame = picam2.capture_array()
+hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
+```
+Instead of processing the entire screen, we focus on processing specific areas of the frame that encapsulate the left wall, right wall, and the floor/line infront of the robot. These areas save computation and drastically improve detection speed. These boxes are visualized and returned using the function ```display_roi()``` on the video feed for live confirmation. Thereafter, we begin color masking using thresholds that are defined by a lower and upper HSV range:
 
-How does the car steer without hitting the walls?
-How do we manage turns?
-When do we end a round?
+```python
+rBlack = [np.array([0,0,0]), np.array([180, 255, 75])] # for walls
+rBlue = [np.array([100, 30, 30]), np.array([140, 255, 255])] # for blue line
+rOrange = [np.array([10, 100, 100]), np.array([25,255,255])] # for orange line
+```
+
+If a pixel's HSV value falls within this range, it is part of the target object 
+
+#### PD Steering - How do we remain centered?
+   Our main strategy for autonomous travel was to use proportional derivative control with a wide-angle camera, a FOV of 170 degrees. In the open challenge, the only components visible to the camera were the two parallel inner and outer walls, as well as the colored lines indicating a turn. The code begins by measuring how many contours are present in the ROI (Region of Interest) for both walls, and by calculating the area of these contours, it becomes a means of determining how much of the walls are visible to the camera. By calculating the difference between the left and right walls based on the contours on either side, which is again based on the horizontal position of the car, we can determine how far we are from the desired trajectory. This area difference, also known as Cross Track Error (Ep), would be multiplied by a scaling factor called the proportional gain, which would result in a steering angle. Overall, the gain that would satisfy the requirements of our vehicle would be 0.005, and this value is subject to change. The main reason why our value is so small is that the servo's range of movement is between -25 degrees (far left) and 25 degrees (far right), and our car is relatively slow. 
+
+```python
+# Proportional and derivative gains
+kp = 0.005
+kd = 0.0004
+```
+
+   With proportional control, if the car only sees a single wall, it can enter the center line (center of both walls) crookedly. The result of this is that the controller will repeatedly overshoot the actual desired trajectory and not actually follow it. To correct this overshooting problem, we consider additional error measurements to update our steering command. The Derivative term  allows us to understand how fast we are moving in a perpendicular direction with respect to the desired trajectory. If the cross-track error is a low figure, or 0, it means we are perfectly following the desired trajectory. So by calculating the difference between our current area difference to the previous area difference, we get our derivative term, which likewise is subject to a derivative gain, allowing us to eventually close that overshooting gap in the instance that the car follows a zig-zag pattern. To prevent cases where our car would underdamp or overdamp, our team would continuously test different numerical figures and would eventually settle on 0.0004. This would allow our slow car to perfectly navigate the rounds smoothly without overshooting or underdamping because of this robust algorithm to determine the best angle
+
+```python
+# find the area difference (cross-track error) and cross-track error rate 
+areaDiff = areaLeft - areaRight
+derivative_term = areaDiff - prevAreaDiff 
+MID_SERVO = 0 # default angle of car and center 
+
+# PD Steering Algorithm            
+angle = int(MID_SERVO + (kp * areaDiff) + (kd * derivative_term))
+```
+
+#### Turning - End
 
 ### Obstacle:
 Where do we pick back up from the open challenge code?
