@@ -243,12 +243,12 @@ servo_angle_queue.put(angle)
 When ``` areaLineBlue ``` or ``` areaLineOrange ``` exceeds a threshold, the robot recognizes a visible turn marker. The loop will decide on a turn when there is currently no active track direction and the system is ready to accept a new line, ``` line_released = True ```
 
 
-### Parking:
+### Parking
 How do we leave the parking, and how do we understand direction?
 How do we enter the parking spot after 3 rounds?
 How do we manage color detection between red pillars and magenta parking lot walls?
 
-### Flow Diagram:
+#### Flow Diagram - Obstacle Challenge
 
 <img width="791" height="652" alt="image" src="https://github.com/user-attachments/assets/2f230ded-b8f1-44ba-b78e-60dafe4bf03d" />
 
