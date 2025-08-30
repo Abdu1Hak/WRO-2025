@@ -1,6 +1,67 @@
-# WRO-2025
+# WRO-2025 - Engineering Documentation ⚙️⚙️
 
-The README file will be the central home for all written documentation. It will elaborate on all sections
+### Team Members 
+
+[Insert Professional Photo Here]
+
+- Abdul Farooqi, 17, abdulfarooqi@gmail.com
+- Aarav Daudia, 16, f18astro@gmail.com
+
+### Repository Contents
+
+File Name | Description
+--- | ---
+[models](https://github.com/Abdu1Hak/WRO-2025/tree/main/Models) | Folder for models used by 3D printers to produce the mechanical elements on the car
+[t-photos](https://github.com/Abdu1Hak/WRO-2025/tree/main/t-photos) | Contains 2 Photos of all team members
+[v-photos](https://github.com/Abdu1Hak/WRO-2025/tree/main/v-photos) | Contains 6 Photos of the vehicle
+[video](https://github.com/Abdu1Hak/WRO-2025/tree/main/video) | Contains 2 Video links to the Car performing the Open and Obstacle Challenge
+[schemes](https://github.com/Abdu1Hak/WRO-2025/tree/main/Schemes) | Contains several electrical schematic diagrams of the vehicle
+[src](https://github.com/Abdu1Hak/WRO-2025/tree/main/srcs) | Contains the main source code for the open and obstacle challenge + more
+[other](https://github.com/Abdu1Hak/WRO-2025/tree/main/Other) | Other essential files
+
+
+### README Contents
+
+- [Intro](#1-introduction)
+- [Game Objective](#2-objective-of-the-game)
+- [Game Strategy](#3-what-is-our-goal)
+- [Mobility Management](#4-mobility-management)
+- [Power and Sense Management](#5-power-and-sense-management)
+- [Software](#6-software---open-challenge---obstacle-challenge---parking)
+  - [Setup and Initialization](#using-vnc---connecting-to-the-pi)
+  - [Begin Open Challenge](#open-challenge)
+    - [Wall Detection](#wall-detection)
+    - [PD Steering](#pd-steering)
+    - [Turning](#turning)
+  - [Obstacle Challenge](#obstacle-challenge)
+    - [Pillar Detection and Maneuvering](#pillar-detection-and-maneuvering)
+    - [Backtracking](#backtracking)
+    - [Toggling Between Modes](#toggling-between-pillar-following-and-wall-following)
+    - [Turning (Obstacle)](#turning-with-obstacles-in-the-way---wait)
+  - [Parking](#parking)
+ - [Flow Diagram Logic](#flow-diagram---obstacle-challenge)
+- [Assembly](#7-assembly)
+- [Improvements](#8-improvements)
+
+
+
+Things to do:
+1. Fix Open Challenge Code - Organize it, include comments, and restructure code logic
+2. Add Vehicle Pictures and Team pictures
+3. Video of Open Challenge - Annotated
+   
+5. Add Team pics to Read Me
+6. Add Introductions and Objectives
+7. Include Hardware Components in a table format or organized format
+8. Finish Mobility Management - includes pictures, chassis design, motors, servo, improvements, final product -- AARAV
+9. Power and Sense Management - ElectroMechanical Diagram - Power and wiring, sensors, hat, expansion board, etc.
+
+10. Fix Obstacle Challenge Code - Organize it, .... # Sep. 1
+11. Video it
+12. Finish Documentation of Parking and Turning
+13. SUBMIT - 6 Days Left!
+
+
 
 Things to consider as part of the README file:
 
@@ -25,7 +86,7 @@ Links to Jump to sections
 What is this year's challenge - obstacle and open
 
 
-## 3. What is our goal?
+## 3. What is our goal
 
 Considering our skill set - what areas did we prioritize, beginning challenges, and our goal to work towards
 
@@ -52,8 +113,6 @@ wiring diagrams. Be as detailed as possible - provide improvements.
 
 ## 6. Software - Open Challenge - Obstacle Challenge - Parking
 
-Identify the Logic flow, including code snippets, and provide pictures of the VNC
-
 ### Using VNC - Connecting to the PI
 
    Our primary method of interfacing with the Raspberry Pi to monitor the camera feed was through RealVNC, establishing a wireless connection between the Pi and our system on the same network. By accessing the Pi’s IP address, we were able to mirror its desktop environment directly on our screen. While this approach initially introduced little overhead, performance bottlenecks quickly emerged, primarily in the form of latency and memory limitations.
@@ -72,7 +131,7 @@ t2 = threading.Thread(target=servo_move, name='t2')
 ```
 
 
-### Open Challenge
+## Open Challenge
 
 #### Wall Detection
 The car begins by initializing the PiCamera2, giving us a continuous video feed which will later be processed for color detection and contour tracking. Inside the main loop, we capture the frame and convert the RGB image to HSV (a color model that separates hue from brightness), which is required for accurate color masking. 
@@ -177,7 +236,7 @@ if counter == 12 and (abs(angle) - MID_SERVO) <= 3:
    motor_command_queue.put("stop")
 ```
 
-### Obstacle Challenge:
+## Obstacle Challenge
 
 #### Pillar Detection and Maneuvering 
 
@@ -267,7 +326,7 @@ How do we leave the parking, and how do we understand direction?
 How do we enter the parking spot after 3 rounds?
 How do we manage color detection between red pillars and magenta parking lot walls?
 
-#### Flow Diagram - Obstacle Challenge
+### Flow Diagram - Obstacle Challenge
 
 <img width="791" height="652" alt="image" src="https://github.com/user-attachments/assets/2f230ded-b8f1-44ba-b78e-60dafe4bf03d" />
 
