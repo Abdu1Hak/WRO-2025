@@ -30,7 +30,26 @@ What is this year's challenge - obstacle and open
 Considering our skill set - what areas did we prioritize, beginning challenges, and our goal to work towards
 
 ## 4. Mobility Management
+
+Mobility management discussion should cover how the vehicle movements are
+managed. What motors are selected, how they are selected and implemented.
+A brief discussion regarding the vehicle chassis design /selection can be
+provided as well as the mounting of all components to the vehicle
+chassis/structure. The discussion may include engineering principles such as
+speed, torque, power etc. usage. Building or assembly instructions can be
+provided together with 3D CAD files to 3D print parts. Be as detailed as possible.
+Information on improvements is also provided.
+
 ## 5. Power and Sense Management
+
+Power and Sense management discussion should cover the power source for
+the vehicle as well as the sensors required to provide the vehicle with
+information to negotiate the different challenges. The discussion can include
+the reasons for selecting various sensors and how they are being used on the
+vehicle together with power consumption. The discussion could include a wiring
+diagram with BOM for the vehicle that includes all aspects of professional
+wiring diagrams. Be as detailed as possible - provide improvements. 
+
 ## 6. Software - Open Challenge - Obstacle Challenge - Parking
 
 Identify the Logic flow, including code snippets, and provide pictures of the VNC
