@@ -4,8 +4,12 @@
 
 [Insert Professional Photo Here]
 
+> Team Members
 - Abdul Farooqi, 17, abdulfarooqi@gmail.com
 - Aarav Daudia, 16, f18astro@gmail.com
+
+> Coach
+- Vikramjeet Singh, ...
 
 ### Repository Contents
 
@@ -103,6 +107,10 @@ Information on improvements is also provided.
 
 ## 5. Power and Sense Management
 
+### Hardware Setup Guide
+
+The Robot is composed of a minimal amount of sensors, motors, and a main processing unit, the Raspberry Pi 4 Model B. 
+
 Power and Sense management discussion should cover the power source for
 the vehicle as well as the sensors required to provide the vehicle with
 information to negotiate the different challenges. The discussion can include
@@ -128,6 +136,92 @@ servo_angle_queue = Queue()
 ...
 t1 = threading.Thread(target=motor_drive, name='t1')
 t2 = threading.Thread(target=servo_move, name='t2')
+```
+
+### Installing Libraries
+
+``` sudo apt install smbus, board, busio, adafruit_vl53l0x```
+- Relevant Libraries to interact with the Hat (Expansion Board) and Motor
+
+``` sudo apt install python3-picamera2 ```
+- Library to open the camera
+
+``` sudo apt install cv2, math, numpy, time ```
+- Relevant libraries to perform operations using the camera
+
+``` pip install threading ```
+-  Thread the core processor 
+
+### Interacting with Motors and Servos
+
+As outlined before, a Motor and Servo Driver Hat is mounted on the Raspberry Pi 40-pin header and offloads two jobs: generating PWM signals (using the PCA9685 chip) and driving the DC Motor (using the TB6612 H-Bridge). The Pi communicates with the PCA9685 using I2C, creating up to 16 PWM outputs. We set a default frequency (typically 50Hz for servos), which the PCA converts to a 12-bit count and outputs that duty cycle on the channel.
+
+Using a class provided by the HAT itself, we call distinct functions from the class to execute our motor and servo commands. 
+We create a class instance and set the frequency to 50:
+```python
+pwm = PCA9685()
+pwm.setPWMFreq(50) 
+```
+
+We swiftly move the servo to the targeted angle using two functions:
+
+```MoveServo```: This function takes a target angle that is calculated based on the car's surroundings, and converts it into a corresponding pulse width signal used to move the servo to that position. It first applies a calibrated offset to account for the servo's physical mounting so that the input angle correctly represents the center. The angle is thereafter clamped within the servo's safe ranges, converted to the PWM, and sent to the servo controller. 
+
+```SweepServo```: This function allows the servo to smoothly reach the desired angle in small increments for a gradual sweep. It generates a sequence of intermediate angles between the start and target, and calls ```MoveServo``` for each step. After completing the sweep, it updates the servo's last position for future reference. 
+
+``` python
+
+def MoveServo(self, channel, angle, delay=0.02):
+
+    # Add a calibrated offset to ensure that 0 is in fact the center of the servo, and not -50. This is based on the servo's position and its mounting.
+    physical_angle = angle - 50
+    physical_angle = max(-90, min(90, physical_angle)) 
+    pulse = int(1500 + (physical_angle / 90.0) * 1000) # convert it to a pulse width 
+    self.setServoPulse(channel, pulse) 
+    time.sleep(delay)
+
+def SweepServo(self, channel, end_angle, step=1, delay=0.02): 
+
+    end_angle = max(-30, min(30, end_angle))
+    if not hasattr(self, '_servo_positions'):
+        self._servo_positions = {}
+
+    start_angle = self._servo_positions.get(channel, 0)
+    if start_angle < end_angle:
+        angles = range(start_angle, end_angle + 1, step)
+    else:
+        angles = range(start_angle, end_angle - 1, -step)
+
+    for angle in angles:
+        self.MoveServo(channel, angle, delay)
+
+    self._servo_positions[channel] = end_angle
+```
+
+The ```Drive``` function controls the DC motor's speed and direction using PWM signals. The percent parameter sets the motor's speed by multiplying it by the maximum PWM pulse, while the wise parameter sets the rotation direction or stopping command. Depending on the value of wise, two pins  (INA1 and INA2) are set to High or Low to achieve the intended result.
+
+```python
+def Drive(self, channel, percent, wise, pwm):
+    pulse = int(15000 * percent) # multiply the percent (between 0.0 to 1.0) with the maximum PWM pulse
+    pwm.setServoPulse(channel, pulse)
+
+    # Manipulate the directions
+    if wise == "CW":
+        pwm.setServoPulse(DC_MOTOR_INA1,19999) # set INA1 H 
+        pwm.setServoPulse(DC_MOTOR_INA2,0) # set INA2 L
+    elif wise == "CCW":
+        pwm.setServoPulse(DC_MOTOR_INA1,0) # set INA1 H 
+        pwm.setServoPulse(DC_MOTOR_INA2,19999) # set INA2 L
+    elif wise == "Stop":
+        pwm.setServoPulse(DC_MOTOR_INA1,19999) # set INA1 H 
+        pwm.setServoPulse(DC_MOTOR_INA2,19999) # set INA2 L
+    elif wise == "Coast":
+        pwm.setServoPulse(DC_MOTOR_INA1,0) # set INA1 H 
+        pwm.setServoPulse(DC_MOTOR_INA2,0) # set INA2 L
+    else:
+        print("Error, invalid entry, if you have forgotten, options are: 1)CW 2)CCW 3)Stop or 4)Coast")
+    
+        
 ```
 
 
