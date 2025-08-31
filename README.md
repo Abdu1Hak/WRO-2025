@@ -26,8 +26,7 @@ File Name | Description
 
 ### README Contents
 
-- [Intro](#1-introduction)
-- [Game Objective](#2-objective-of-the-game)
+- [Game Objective](#1-objective-of-the-game)
 - [Game Strategy](#3-what-is-our-goal)
 - [Mobility Management](#4-mobility-management)
 - [Power and Sense Management](#5-power-and-sense-management)
@@ -50,44 +49,41 @@ File Name | Description
 
 
 Things to do:
-1. Fix Open Challenge Code - Organize it, include comments, and restructure code logic
+
 2. Add Vehicle Pictures and Team pictures
 3. Video of Open Challenge - Annotated
-   
 5. Add Team pics to Read Me
-6. Add Introductions and Objectives
-7. Include Hardware Components in a table format or organized format
-8. Finish Mobility Management - includes pictures, chassis design, motors, servo, improvements, final product -- AARAV
-9. Power and Sense Management - ElectroMechanical Diagram - Power and wiring, sensors, hat, expansion board, etc.
-
-10. Fix Obstacle Challenge Code - Organize it, .... # Sep. 1
-11. Video it
-12. Finish Documentation of Parking and Turning
-13. SUBMIT - 6 Days Left!
+   
+9. Finish Mobility Management - includes pictures, chassis design, motors, servo, improvements, final product -- AARAV
+10. Power and Sense Management - ElectroMechanical Diagram - Power and wiring, sensors, hat, expansion board, etc.
+11. Fix Obstacle Challenge Code - Organize it, .... # Sep. 1
+12. Video it
+13. Finish Documentation of Parking and Turning
+14. SUBMIT - 6 Days Left!
 
 
+## 1. Objective of the Game
 
-Things to consider as part of the README file:
+### The Challenge
 
-1. Pictures - introductions
-2. Identify the Objective of the Game
-3. Our approach - general to focused, discussions, challenges, goal - issues we faced
-4. Mobility Management - motors, chassi design, mounting of all components. speed, torque, power, etc - 3D - issues we faced
-5. Power and Sense Management- camera, servos, battery, hat, their usage and what they do - issues we faced
-6. Obstacle Management - how they interact with components, strategy of open and obstacle, parking,  program flow, conditions, logic diagrams, code blocks, and commented code - issues we faced during the coding
-7. Assembly Instructions
-8. Improvements
+The 2025 WRO Future Engineers challenge is a Time Attack race. The car must complete its laps as fast as possible while following strict driving rules. The challenge focuses on building a fully autonomous self-driving car capable of navigating randomized environments, obeying traffic rules, and performing parallel parking correctly at the finish.
 
+The vehicle must complete three full laps around the track in each attempt. During the run, the car cannot collide with or move the traffic signs (pillars) placed on the field.
 
-## 1. Introduction
+Goal: Design and program a self-driving car that completes both the Open Challenge and the Obstacle Challenge.
 
-Team Members & Contacts
-Repo Structure
-Links to Jump to sections
+### Open Challenge
 
-## 2. Objective of the Game
+- Complete three laps around the track without touching the walls.
+- Each side of the track is randomized to be either 100 cm or 60 cm.
+- The driving direction (clockwise or counterclockwise) is also randomized at the start of the run.
 
-What is this year's challenge - obstacle and open
+### Obstacle Challenge
+
+- Complete three laps around the track while avoiding traffic signs (pillars).
+  - Red Pillar -> Right Side | Green Pillar - Left Side
+- The driving direction (clockwise or counterclockwise) is randomized.
+- After 3 laps are completed, the car must parallel park into the parking zone
 
 
 ## 3. What is our goal
