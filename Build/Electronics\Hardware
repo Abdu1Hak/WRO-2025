@@ -1,0 +1,30 @@
+Electrical
+====
+
+This section discusses the various hardware components that we utilize to complete the challenge as well as the reasonings about why we selected these parts.
+
+## Parts Explanation
+
+| Part Name | Explanation | Image | Datasheet |
+| ----------- | ----------- | ----------- | ----------- |
+| Raspberry Pi 4 Model B Quad Core 64 Bit WiFi Bluetooth (2GB)  | We selected the Raspbeery Pi 4 to be the brains of our robot for a myriad of reasons. First, the Raspbeery Pi is well known, respected, and reliable brand that already has multiple accessories designed for it as well as multiple libraries available, making our lives simpler and easier. The Raspbeeru Pi 4 is extremely powerful with excellent image processing, this allows us to use solely a Raspberry Pi 4 camera where other teams using Arduinos or ESPs are forced to use a mosaic os ensors including a camera, multiple Time of Flight sensors, colour sensors, as well as gyro sensors, which gives us a huge advantage in streamlining our design and code. The Raspberry Pi 4 contains 20 digital input/output pins allowing us to control various devices. | ![image](https://drive.google.com/file/d/1jcntYn8FrEI_t9AaL071cwJKFTuHKwKT/view?usp=drive_link) | [Raspberry Pi 4 Information](https://drive.google.com/file/d/15USfiaweyP4RiKymB9xjHh8MpDuqv5D5/view?usp=drive_link) |
+| DC 6V Micro Gear Box Speed Reduction Motor, 300RPM | We are using this specific motor to drive the robot as it contains a gearbox that can reach a maximum speed of 300RPM. The compact size of these motors, coupled with a high RPM, allowed for our smaller compact design to succeed. | ![image](https://drive.google.com/uc?id=1eZ35c58Pk-_ApFsSc1q7nTVgRgd4GYDa) | [DC Motor Info](https://drive.google.com/file/d/1ovx4JvY0TAlGeaWuEGIg9i7RbAIlBQif/view?usp=drive_link) |
+| CJMCU34725 TCS34725 RGB Light Color Sensor | Using this RGB color sensor allows our robot to sense the blue and orange lines at the corners of the mat. This allows us to keep track of how many laps the robot has completed and indicate when the robot needs to turn. | ![image](https://drive.google.com/uc?id=1HwD53e-_Z1O0NMvL_F8MH8kT12Ib7TSx) | [Color Sensor Info](https://www.waveshare.com/w/upload/b/bb/TCS34725_Color_Sensor_user_manual_en.pdf) |
+| ES08MA Metal Analog Servo | In order to steer our vehicle, we use a servo motor with 2.0 Kilogram-force centimetres of torque and a speed of 0.10 sec/60°. Since steering will require a reasonably large amount of torque, this motor provides more than enough for our application. Furthermore, this servo motor can turn quickly, which allows us to make incredibly sharp turns. | ![image](https://drive.google.com/uc?id=1PW3WRTPNTWx5we4OpXFKie0twWL3cDdZ) | [Servo Info](https://m.media-amazon.com/images/I/61ZU3A84tYS._AC_SL1000_.jpg) |
+| XICOOLEE Motor and Servo Driver HAT for Raspberry Pi Zero/Zero W/Zero WH/2B/3B/3B+/4B, Adopting Dual Chips PCA9685+TB6612 | Without using a motor and servo Driver HAT, attempting to control our motor and servo would be a nightmare, between the immense wire management to the unneseccarily complex code, it does not make sense not to use one. | ![image](https://drive.google.com/uc?id=1pc-CyRu6RADIgv9fArSeq_qil19EAXNp) | [Motor Driver Info](http://www.handsontec.com/dataspecs/L298N%20Motor%20Driver.pdf) |
+| PixyCam Pixy 2.1 Robot Vision Image Sensor | Since the Arduino Nano does not have enough computing power to process images, we are outsourcing the processing to the Pixy 2.1. This camera is able to provide the microcontroller with the necessary information to plan an appropriate path for the robot to take. | ![image](https://drive.google.com/uc?id=1V1Nqks-wj--PqYVI9ksZawQXJftz3UOQ) | [Pixy 2.1 Info](https://docs.pixycam.com/wiki/doku.php?id=wiki:v2:start) |
+
+## Parts Bill Of Materials (BOM)
+| Part Name | Quantity |
+| ----------| -------- |
+| 1.5V Rechargeable Lithium Ion Battery | 4 |
+| DC 6V Micro Gear Box Speed Reduction Motor, 300RPM | 2 |
+| CJMCU34725 TCS34725 RGB Light Color Sensor | 1 |
+| Arduino Nano | 1 |
+| ES08MA Metal Analog Servo | 1 |
+| GP2Y0A02YK0F IR Range Sensor | 3 |
+| GP2Y0A41SK0F IR Range Sensor | 2 |
+| HW-201 IR Sensor | 1 |
+| L298N Dual H-Bridge Motor Driver | 1 |
+| L3G4200D Triple Axis Gyro Angular Velocity Sensor Module | 1 |
+| PixyCam Pixy 2.1 Robot Vision Image Sensor | 1 |
