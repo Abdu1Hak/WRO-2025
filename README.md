@@ -292,11 +292,24 @@ servo_angle_queue.put(angle)
 Similarly to the walls, we also detect the number of contours present in the orange and blue lines ahead of us. When the number of contours in the line exceeds an arbitrary threshold value, it is a condition to enter its respective turn direction. Once in a turn, we constantly examine if the wall that we turn against is above a threshold value and if the subsequent line has been detected. If these two conditions are met, we exit the turn and append our counter. The counter is responsible for calculating the number of turns.
 
 ```python
+# ===== TURN COMPLETED CHECK =====
+
 if left_turn or right_turn:
-   if ((areaRight > threshold_to_end_turn and right_turn) and areaLineBlue > line_threshold) or (areaLeft > threshold_to_end_turn and left_turn and areaLineOrange > line_threshold):
-   left_turn = False
-   right_turn = False
-   counter += 1 
+    turn_should_end = False
+    # Conditions to exit a turn: respective wall reappears and subsequent line is spotted
+    if left_turn and areaLeft > threshold_to_end_turn and areaLineOrange > line_threshold:
+        turn_should_end = True
+    elif right_turn and areaRight > threshold_to_end_turn and areaLineBlue > line_threshold:
+        turn_should_end = True
+    
+    if turn_should_end:
+        # Complete the turn
+        left_turn = False
+        right_turn = False 
+        turn_just_ended = True
+        prevDiff = 0
+        counter += 1
+        print("TURN COMPLETED - COUNTER: ", counter) 
 ```
 
 In a right turn, we will continue using the angle value calculated based on the area difference. Ultimately, when a right turn appears, the amount of contour in the right wall will decrease until the value eventually reaches 0. This, in turn, generates an angle that resembles a sharp right turn. To prevent this angle from exceeding the steering range, we clamp the values to its turn degree. 
@@ -304,26 +317,41 @@ In a right turn, we will continue using the angle value calculated based on the 
 
 ```python
 elif right_turn:
-   angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
+    # standard right procedure
+    angle = int(MID_SERVO + (kp * areaDiff) + (kd * derivative_term))
+    angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
 ```
 
 In a left turn, we noticed that the left steering was not as powerful as the right. We assumed that this was a result of a mechanical issue present within our chassis. Hence, when the robot travels clockwise, we introduced different Kp and kd values that would calculate an angle within the left turn condition.
 
 ```python
-elif left_turn:
-   angle = int(MID_SERVO + (kp_left * areaDiff) + (kd_left * derivative_term))
-   angle = min(TURN_DEGREE, max(angle, -TURN_DEGREE))
+if left_turn:
+  # Use left-specific PD vals
+  angle = int(MID_SERVO + (kp_left * areaDiff) + (kd_left * derivative_term))
+  angle = min(TURN_DEGREE_LEFT, max(angle, -TURN_DEGREE_LEFT))
+  print("LEFT ANGLE", angle)
 ```
- Once a turn is ended and both colored lines are out of sight, a variable called ``` line_released = True ``` is updated to mark the end of a turn and await the next turn. If the car is not in a left or right turn, the angle values would still be clamped, and to combat our left steering weakness, the negative angles would be offset by a small amount of -2 to make the car even smoother.
+If the car is not in a left or right turn, the angle values would still be clamped, and to combat our left steering weakness, the negative angles would be offset by a small amount of -2 to make the car even smoother.
 
-Once the counter has reached 12 (3 Full rounds) and the angle value is near zero (the car is straight), we wait for two seconds before turning the motor off. 
+To prevent the same line from the subsequent line from being detected after a turn has been performed, we wait until both lines are out of sight and update a variable ``` line_released = True ```
+
+```python
+if turn_just_ended:
+    # Wait until both lines are out of frame to prevent another turn on the same line
+    if areaLineBlue < line_threshold and areaLineOrange < line_threshold:
+        line_released = True
+        turn_just_ended = False 
+        print("LINE CLEARED!! ")
+```
+
+Once the counter has reached 12 (3 Full rounds) and the angle value is near zero (the car is straight), we wait for two seconds before turning the motor off.
 
 ```python
 # Stop Car Logic 
-if counter == 12 and (abs(angle) - MID_SERVO) <= 3:
-   # STOP CAR
-   sleep(2) 
-   motor_command_queue.put("stop")
+if counter == 12 and abs(angle) <= 3:
+    sleep(1)
+    motor_command_queue.put("stop")
+    servo_angle_queue.put(MID_SERVO)
 ```
 
 ## Obstacle Challenge
