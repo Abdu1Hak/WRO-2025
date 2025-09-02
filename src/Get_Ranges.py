@@ -1,86 +1,154 @@
-from __future__ import print_function
 import cv2 as cv
-import argparse
-import os
+from picamera2 import Picamera2
+import sys
+from masks import rMagenta, rRed, rGreen, rBlue, rOrange, rBlack
+import numpy as np
+
+# Max value for LAB components
 max_value = 255
-max_value_H = 360//2
-low_H = 0
-low_S = 0
-low_V = 0
-high_H = max_value_H
-high_S = max_value
-high_V = max_value
+max_value_L = 255
+max_value_AB = 255  
+
+maskDict = {
+    "magenta": rMagenta,
+    "red": rRed,
+    "green": rGreen,
+    "blue": rBlue,
+    "orange": rOrange,
+    "black": rBlack
+}
+
+#set mask based on program arguments
+if len(sys.argv) > 1:
+    mask = maskDict[sys.argv[1].lower()]
+            
+    
+low_L = mask[0][0]
+low_A = mask[0][1]
+low_B = mask[0][2]
+high_L = mask[1][0]
+high_A = mask[1][1]
+high_B = mask[1][2]
 window_capture_name = 'Video Capture'
 window_detection_name = 'Object Detection'
-low_H_name = 'Low H'
-low_S_name = 'Low S'
-low_V_name = 'Low V'
-high_H_name = 'High H'
-high_S_name = 'High S'
-high_V_name = 'High V'
-def on_low_H_thresh_trackbar(val):
-    global low_H
-    global high_H
-    low_H = val
-    low_H = min(high_H-1, low_H)
-    cv.setTrackbarPos(low_H_name, window_detection_name, low_H)
-def on_high_H_thresh_trackbar(val):
-    global low_H
-    global high_H
-    high_H = val
-    high_H = max(high_H, low_H+1)
-    cv.setTrackbarPos(high_H_name, window_detection_name, high_H)
-def on_low_S_thresh_trackbar(val):
-    global low_S
-    global high_S
-    low_S = val
-    low_S = min(high_S-1, low_S)
-    cv.setTrackbarPos(low_S_name, window_detection_name, low_S)
-def on_high_S_thresh_trackbar(val):
-    global low_S
-    global high_S
-    high_S = val
-    high_S = max(high_S, low_S+1)
-    cv.setTrackbarPos(high_S_name, window_detection_name, high_S)
-def on_low_V_thresh_trackbar(val):
-    global low_V
-    global high_V
-    low_V = val
-    low_V = min(high_V-1, low_V)
-    cv.setTrackbarPos(low_V_name, window_detection_name, low_V)
-def on_high_V_thresh_trackbar(val):
-    global low_V
-    global high_V
-    high_V = val
-    high_V = max(high_V, low_V+1)
-    cv.setTrackbarPos(high_V_name, window_detection_name, high_V)
+low_L_name = 'Low L'
+low_A_name = 'Low A'
+low_B_name = 'Low B'
+high_L_name = 'High L'
+high_A_name = 'High A'
+high_B_name = 'High B'
 
-parser = argparse.ArgumentParser(description='Code for Thresholding Operations using inRange tutorial.')
-parser.add_argument('--camera', help='Camera divide number.', default=0, type=int)
-args = parser.parse_args()  
+## [low]
+def on_low_L_thresh_trackbar(val):
+    global low_L
+    global high_L
+    low_L = val
+    low_L = min(high_L-1, low_L)
+    cv.setTrackbarPos(low_L_name, window_detection_name, low_L)
+## [low]
 
-cap = cv.VideoCapture(args.camera)
+## [high]
+def on_high_L_thresh_trackbar(val):
+    global low_L
+    global high_L
+    high_L = val
+    high_L = max(high_L, low_L+1)
+    cv.setTrackbarPos(high_L_name, window_detection_name, high_L)
+## [high]
+
+def on_low_A_thresh_trackbar(val):
+    global low_A
+    global high_A
+    low_A = val
+    low_A = min(high_A-1, low_A)
+    cv.setTrackbarPos(low_A_name, window_detection_name, low_A)
+
+def on_high_A_thresh_trackbar(val):
+    global low_A
+    global high_A
+    high_A = val
+    high_A = max(high_A, low_A+1)
+    cv.setTrackbarPos(high_A_name, window_detection_name, high_A)
+
+def on_low_B_thresh_trackbar(val):
+    global low_B
+    global high_B
+    low_B = val
+    low_B = min(high_B-1, low_B)
+    cv.setTrackbarPos(low_B_name, window_detection_name, low_B)
+
+def on_high_B_thresh_trackbar(val):
+    global low_B
+    global high_B
+    high_B = val
+    high_B = max(high_B, low_B+1)
+    cv.setTrackbarPos(high_B_name, window_detection_name, high_B)
+
+# Initialize the PiCamera2
+picam2 = Picamera2()
+picam2.preview_configuration.main.size = (640,480)
+picam2.set_controls({"AeEnable": True})
+picam2.preview_configuration.main.format = "RGB888"
+print(picam2.preview_configuration.controls.FrameRate)
+picam2.preview_configuration.controls.FrameRate = 30
+print(picam2.preview_configuration.controls.FrameRate)
+picam2.preview_configuration.align()
+picam2.configure("preview")
+picam2.start()
+
+## [window]
 cv.namedWindow(window_capture_name)
 cv.namedWindow(window_detection_name)
-cv.createTrackbar(low_H_name, window_detection_name , low_H, max_value_H, on_low_H_thresh_trackbar)
-cv.createTrackbar(high_H_name, window_detection_name , high_H, max_value_H, on_high_H_thresh_trackbar)
-cv.createTrackbar(low_S_name, window_detection_name , low_S, max_value, on_low_S_thresh_trackbar)
-cv.createTrackbar(high_S_name, window_detection_name , high_S, max_value, on_high_S_thresh_trackbar)
-cv.createTrackbar(low_V_name, window_detection_name , low_V, max_value, on_low_V_thresh_trackbar)
-cv.createTrackbar(high_V_name, window_detection_name , high_V, max_value, on_high_V_thresh_trackbar)
-while True:
-    
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    image_path = os.path.join(script_dir, "p.png") # <------- ENTER FILE NAME OF PNG / IN THE SAME DIRECTORY
-    frame = cv.imread(image_path)
-    frame_HSV = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-    frame_threshold = cv.inRange(frame_HSV, (low_H, low_S, low_V), (high_H, high_S, high_V))
-    frame_resized = cv.resize(frame_threshold, (640, 480))
+## [window]
 
-    #rBlue = [np.array([100, 30, 30]), np.array([140, 255, 255])]
-    cv.imshow(window_capture_name, frame)
-    cv.imshow(window_detection_name, frame_threshold)
+## [trackbar]
+cv.createTrackbar(low_L_name, window_detection_name , low_L, max_value_L, on_low_L_thresh_trackbar)
+cv.createTrackbar(high_L_name, window_detection_name , high_L, max_value_L, on_high_L_thresh_trackbar)
+cv.createTrackbar(low_A_name, window_detection_name , low_A, max_value_AB, on_low_A_thresh_trackbar)
+cv.createTrackbar(high_A_name, window_detection_name , high_A, max_value_AB, on_high_A_thresh_trackbar)
+cv.createTrackbar(low_B_name, window_detection_name , low_B, max_value_AB, on_low_B_thresh_trackbar)
+cv.createTrackbar(high_B_name, window_detection_name , high_B, max_value_AB, on_high_B_thresh_trackbar)
+## [trackbar]
+
+while True:
+    # Capture the frame
+    frame = picam2.capture_array()
+
+    # Convert from BGR to LAB
+    frame_LAB = cv.cvtColor(frame, cv.COLOR_BGR2Lab)
     
+    #frame_LAB = cv.bilateralFilter(frame_LAB, d=3, sigmaColor=50, sigmaSpace=50)
+    frame_LAB = cv.GaussianBlur(frame_LAB, (7, 7), 0)
+
+    # Apply threshold using the LAB range (A and B are shifted)
+    frame_threshold = cv.inRange(frame_LAB, (low_L, low_A, low_B), (high_L, high_A, high_B))
+    
+    
+
+    kernel = np.ones((5, 5), np.uint8)
+        
+    e_frame = cv.erode(frame_threshold, kernel, iterations=1)
+    d_frame = cv.dilate(e_frame, kernel, iterations=1)
+    
+    contours = cv.findContours(d_frame, cv.RETR_EXTERNAL,
+        cv.CHAIN_APPROX_SIMPLE)[-2]
+    
+    cv.drawContours(frame, contours, -1, (238, 144, 144), 2)
+    
+    ## [show]
+    cv.imshow(window_capture_name, frame)
+    cv.imshow(window_detection_name, d_frame)
+    ## [show]
+    
+    
+    
+
+    # Exit on 'q' or ESC
     key = cv.waitKey(30)
     if key == ord('q') or key == 27:
+        picam2.stop()
+        cv.destroyAllWindows()
+        
+        # Print the LAB range for reference
+        print([[low_L, low_A, low_B], [high_L, high_A, high_B]])
         break
