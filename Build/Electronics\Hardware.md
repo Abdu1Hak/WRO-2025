@@ -18,12 +18,9 @@ This section discusses the various hardware components that we utilize to comple
 ## Parts Bill Of Materials (BOM)
 | Part Name | Quantity |
 | ----------| -------- |
-| 1.5V Rechargeable Lithium Ion Battery | 4 |
-| DC 6V Micro Gear Box Speed Reduction Motor, 300RPM | 2 |
-
 | Raspberry Pi 4 Model B Quad Core 64 Bit WiFi Bluetooth (2GB) | 1 |
-| ES08MA Metal Analog Servo | 1 |
-
 | XICOOLEE Motor and Servo Driver HAT for Raspberry Pi Zero/Zero W/Zero WH/2B/3B/3B+/4B, Adopting Dual Chips PCA9685+TB6612 | 1 |
-
-| PixyCam Pixy 2.1 Robot Vision Image Sensor | 1 |
+| [Camera] | 1 |
+| [Motor], rpm | 1 |
+| [Servo] | 1 |
+| [Battery] | 1 |
