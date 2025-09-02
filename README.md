@@ -15,14 +15,14 @@
 
 File Name | Description
 --- | ---
-[build](https://github.com/Abdu1Hak/WRO-2025/tree/cc1186081c65a94e3f9d5a899eeedb2a14111d81/Build) | Explanations and descriptions for mechanical/robot build
-[models](https://github.com/Abdu1Hak/WRO-2025/tree/main/Models) | Folder for models used by 3D printers to produce the mechanical elements on the car
+[Build](https://github.com/Abdu1Hak/WRO-2025/tree/cc1186081c65a94e3f9d5a899eeedb2a14111d81/Build) | Explanations and descriptions for mechanical/robot build
+[Models](https://github.com/Abdu1Hak/WRO-2025/tree/main/Models) | Folder for models used by 3D printers to produce the mechanical elements on the car
 [t-photos](https://github.com/Abdu1Hak/WRO-2025/tree/main/t-photos) | Contains 2 Photos of all team members
 [v-photos](https://github.com/Abdu1Hak/WRO-2025/tree/main/v-photos) | Contains 6 Photos of the vehicle
 [video](https://github.com/Abdu1Hak/WRO-2025/tree/main/video) | Contains 2 Video links to the Car performing the Open and Obstacle Challenge
-[schemes](https://github.com/Abdu1Hak/WRO-2025/tree/main/Schemes) | Contains several electrical schematic diagrams of the vehicle
+[Schemes](https://github.com/Abdu1Hak/WRO-2025/tree/main/Schemes) | Contains several electrical schematic diagrams of the vehicle
 [src](https://github.com/Abdu1Hak/WRO-2025/tree/main/srcs) | Contains the main source code for the open and obstacle challenge + more
-[other](https://github.com/Abdu1Hak/WRO-2025/tree/main/Other) | Other essential files
+[Other](https://github.com/Abdu1Hak/WRO-2025/tree/main/Other) | Other essential files
 
 
 ### README Contents
