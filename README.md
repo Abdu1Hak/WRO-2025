@@ -435,9 +435,120 @@ angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
 servo_angle_queue.put(angle)
 ```
 
-#### Turning with Obstacles in the way - WAIT
+#### Turning with Obstacles in the way
 
-When ``` areaLineBlue ``` or ``` areaLineOrange ``` exceeds a threshold, the robot recognizes a visible turn marker. The loop will decide on a turn when there is currently no active track direction and the system is ready to accept a new line, ``` line_released = True ```
+##### 1. Detecting when a turn should begin:
+
+At the start, the robot scans the game mat to decide whether or not it needs to turn left or right. This is done by checking which line color appears intially (blue = left, orange = right):
+
+
+```python
+if track_Dir is None and line_released and not waiting_for_release:
+    if areaLineBlue > line_threshold: 
+        track_Dir = "left"
+        line_released = False  # Reset for this turn
+        print(track_Dir)
+
+    elif areaLineOrange > line_threshold:
+        track_Dir = "right"
+        line_released = False
+        print(track_Dir)
+```
+
+
+```python track_Dir``` keeps track of the current turn direction.
+
+If the robot detects an area of the blue line larger than our line threshold, or minimum area to protect against accidental detection, (areaLineBlue > line_threshold), it sets the turn direction to left and vice versa for the orange line (areaLineOrange > line_threshold).
+
+```python line_released``` ensures that the robot does not accidentally trigger multiple turns from the same line.
+
+Essentially, this section of code is comparable to a decision gate, asking the question?: “Do I start a left turn, right turn, or keep going straight?”
+
+##### 2. Executing the turn
+
+Once the robot knows the direction (track_Dir is “left” or “right”), it needs to rotate by a certain angle to commence and complete the turn.
+
+Code for right turn:
+
+```python
+if track_Dir == "right" and areaLineOrange > line_threshold:
+    if areaLineBlue < line_threshold and closest_pillar_color == "green":
+        angle += (turn_Deg + 8)
+        print("Rft")
+    elif areaLineBlue < line_threshold and closest_pillar_color == "red":
+        angle += (turn_Deg + 4)
+        print("R")
+    elif areaLineBlue < line_threshold and closest_pillar_color == None:
+        angle += (turn_Deg + 8)
+        print("R")
+    elif areaLineBlue >= line_threshold:
+        angle += (turn_Deg - turn_Deg)
+        print("R")
+        turn_End = True
+        turn_counter += 1
+        print(f"Turn {turn_counter} (RIGHT)")
+        track_Dir = None 
+        turn_just_ended = True
+```
+
+While turning right, the robot adjusts its steering angle (```python angle```) based on:
+
+  If blue line is not detected as well as a green pillar, it turns slightly more than normal (turn_Deg + 8).
+
+  If blue line is not detected sees a red pillar, it turns a little less (turn_Deg + 4).
+
+  If blue line is not detected and there is no pillar, it assumes a default turn (turn_Deg + 8).
+
+Once the blue line is sensed (```python areaLineBlue >= line_threshold```), the turn is complete.
+
+The same structure applies for left turns, just mirrored:
+
+```python
+if track_Dir == "left" and areaLineBlue > line_threshold:
+    if areaLineOrange <= line_threshold and closest_pillar_color == "green":
+        kp = 0.034
+        greenTarget = 550
+        angle -= (turn_Deg - 4)
+        print("Left")
+    elif areaLineOrange < line_threshold and closest_pillar_color == "red":
+        ang = angle - 15
+        angle = ang
+        print("Left")
+    elif areaLineOrange < line_threshold and closest_pillar_color == None:
+        angle -= (turn_Deg - 8)
+        print("Left")
+    elif areaLineOrange >= line_threshold:
+        kp = 0.045
+        greenTarget = 600
+        turn_End = True
+        turn_counter += 1
+        print(f"Turn {turn_counter} (LEFT)")
+        track_Dir = None 
+        turn_just_ended = True
+```
+
+##### 3. Ending the turn and counting progress
+
+The last step is marking when a turn is finished.
+This occurs when the opposing line comes back into view (e.g., for a right turn, the blue line reappears).
+
+At that point:
+
+  The robot resets ```python track_Dir = None``` so robot ready to detect the next turn.
+
+  ```python turn_counter``` is incremented to keep track of how many turns have been made and to mark when to run the parallel parking code.
+
+  ```python turn_just_ended``` is set to prevent double-counting.
+
+Summary in plain words
+
+  The robot detects a line color (blue or orange), telling it which way to turn.
+
+  It then executes the turn by adjusting its steering angle. The exact adjustment depends on the colour of pillar detected or no pillar (default turn).
+
+  When the opposing line color comes into view, it knows the turn is finished and subsequently resets for the next turn and adds to the turn counter.
+
+  This ensures the robot can reliably follow a path with alternating left/right turns while adapting to obstacles (pillars).
 
 
 ### Parking
