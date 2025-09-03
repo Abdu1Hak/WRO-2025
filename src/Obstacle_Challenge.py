@@ -48,6 +48,15 @@ i2c = busio.I2C(board.SCL, board.SDA)
 
 kernel = np.ones((5, 5), np.uint8)   # a 5x5 square kernel
 
+i = 0
+
+ang = 0
+
+turn_End = False
+
+turn_just_ended = False
+
+
 # Global Functions
 
 class PCA9685:
@@ -259,8 +268,8 @@ if __name__ == '__main__':
     #ROI_RIGHT_WALL = [490, 230, 600, 370] 
     #ROI_LEFT_WALL = [10, 200, 120, 370] 
     #ROI_RIGHT_WALL = [510, 200, 620, 370]
-    ROI_LEFT_WALL = [30, 230, 120, 370] 
-    ROI_RIGHT_WALL = [510, 230, 600, 370]  
+    ROI_LEFT_WALL = [30, 250, 120, 400] 
+    ROI_RIGHT_WALL = [510, 250, 600, 400]  
 
     ROI_MAIN = [0, 180, 640, 350]
     ROI_LINE = [200, 320, 440, 370]
@@ -276,8 +285,13 @@ if __name__ == '__main__':
 
 
 
-    ROI_UPP1 = [200, 185, 250, 235]
-    ROI_UPP2 = [430, 185, 480, 235]
+   # ROI_UPP1 = [200, 185, 250, 235]
+    #ROI_UPP2 = [430, 185, 480, 235]
+    
+    
+    ROI_UPP1 = [230, 240, 280, 290]
+    ROI_UPP2 = [400, 240, 450, 290]
+
 
 
 
@@ -294,12 +308,14 @@ if __name__ == '__main__':
     yKp = 0.0015 # How much it should steer relative to the y-axis of the pillar (more if closer)
 
     # Color Ranges
-    rBlack = [np.array([0,0,0]), np.array([180, 255, 75])]
-    rBlue = [np.array([100, 30, 30]), np.array([140, 255, 255])]
-    rOrange = [np.array([10, 100, 100]), np.array([25,255,255])]
-    rGreen = [np.array([52, 145, 10]), np.array([72, 255, 141])]
-    rRed = [np.array([0,100,80]), np.array([5,255,255])]
-    rRed2 = [np.array([170,100,80]), np.array([180,255,255])]
+    rBlack = [np.array([0,110,112]), np.array([60, 149, 154])]
+   # rBlue = [np.array([55, 123, 31]), np.array([200, 172, 125])]
+    rBlue = [np.array([160, 115, 115]), np.array([225, 145, 145])]
+    rOrange = [np.array([0, 162, 176]), np.array([255,196,204])]
+    #rGreen = [np.array([0, 45, 0]), np.array([255, 114, 163])]
+    rGreen = [np.array([0, 40, 0]), np.array([255, 120, 170])]
+    rRed = [np.array([0,158,145]), np.array([131,196,171])]
+    rMagenta = [np.array([0,166, 107]), np.array([255,196,144])]
 
     # Thresholds General
     line_threshold = 30
@@ -328,8 +344,8 @@ if __name__ == '__main__':
     #redTarget = 120 
    # greenTarget = 520
    
-    redTarget = 50 
-    greenTarget = 620
+    redTarget = 60 
+    greenTarget = 580
     
     # ERRORS
     pillar_error = 0
@@ -363,9 +379,9 @@ if __name__ == '__main__':
 
         return img 
 
-    def get_contours(ROI, hsv, ranges): 
+    def get_contours(ROI, lab, ranges): 
 
-        segmented_area = hsv[ROI[1]: ROI[3], ROI[0]:ROI[2]]
+        segmented_area = lab[ROI[1]: ROI[3], ROI[0]:ROI[2]]
         
         # Protect against invalid region
         if segmented_area is None or segmented_area.size == 0:
@@ -379,9 +395,9 @@ if __name__ == '__main__':
 
         return list_contour
     
-    def get_red_contours(ROI, hsv, rRed, rRed2): 
+    def get_red_contours(ROI, lab, rRed): 
 
-        segmented_area = hsv[ROI[1]: ROI[3], ROI[0]:ROI[2]]
+        segmented_area = lab[ROI[1]: ROI[3], ROI[0]:ROI[2]]
         
         # Protect against invalid region
         if segmented_area is None or segmented_area.size == 0:
@@ -390,10 +406,9 @@ if __name__ == '__main__':
         # destructure
         
         mask1 = cv2.inRange(segmented_area, rRed[0], rRed[1])
-        mask2 = cv2.inRange(segmented_area, rRed2[0], rRed2[1])
-        combined_mask = cv2.bitwise_or(mask1, mask2)
+        #combined_mask = cv2.bitwise_or(mask1)
         kernel = np.ones((5,5), np.uint8)
-        erode = cv2.erode(combined_mask, kernel, iterations=1)
+        erode = cv2.erode(mask1, kernel, iterations=1)
         dilate = cv2.dilate(erode, kernel)
         list_contour = cv2.findContours(dilate, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
 
@@ -462,308 +477,547 @@ if __name__ == '__main__':
                        
         return pillars
         
-    def unparalleled_Parking():
-        print("Starting test...")
-        frame = picam2.capture_array()
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
-        frame = display_roi(frame,  [ROI_LEFT_WALL, ROI_RIGHT_WALL, ROI_MAIN, ROI_CENTER, ROI_LINE, ROI_BLACK], (255, 204, 0))
-        
-        y1 = 0
-        y2 = frame.shape[0]
-        cListCoreBlack = get_contours(ROI_BLACK, hsv, rBlack)
-
-        # Center black: we'll create a mask and analyze largest contour
-        center_seg_black = hsv[ROI_BLACK[1]:ROI_BLACK[3], ROI_BLACK[0]:ROI_BLACK[2]]
-        black_mask = cv2.inRange(center_seg_black, rBlack[0], rBlack[1])
-        black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_OPEN, kernel, iterations=1)
-        black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
 
 
-        cLeftWall = get_contours(ROI_LEFT_WALL, hsv, rBlack )
-        cRightWall = get_contours(ROI_RIGHT_WALL, hsv, rBlack )
-        areaLeft = detect_contour(cLeftWall, ROI_LEFT_WALL, frame)
-        areaRight = detect_contour(cRightWall, ROI_RIGHT_WALL, frame)
+    #----- Parallel Parking Loop------
 
-        """
+  #  for _ in range(1):
+    picam2.start()
+    
+    pillar_detected = None # Stores the current pillar and next one if spotted
+    
+    # Pillar Closest Data
+    closest_pillar_distance = 10000 # relatively large num, meant to be overridee
+    closest_pillar_color = None
+    closest_pillar_x = None
+    closest_pillar_y = None
+    closest_pillar_area = 0
+            
+    # Setup display
+    frame = picam2.capture_array()
+    lab = cv2.cvtColor(frame, cv2.COLOR_BGR2Lab) 
+    frame = display_roi(frame,  [ROI_LEFT_WALL, ROI_RIGHT_WALL, ROI_MAIN, ROI_CENTER, ROI_LINE, ROI_BLACK, ROI_UPP1, ROI_UPP2], (255, 204, 0))
+    
+    y1 = 0
+    y2 = frame.shape[0]
+    
+    # Get contours of the Line, wall, pillar
+    cLeftWall = get_contours(ROI_LEFT_WALL, lab, rBlack )
+    cRightWall = get_contours(ROI_RIGHT_WALL, lab, rBlack)
+    
+    cLW_UPP = get_contours(ROI_UPP1, lab, rBlack )
+    cRW_UPP = get_contours(ROI_UPP2, lab, rBlack )
+    
+    
+    cCenterWall = get_contours(ROI_CENTER, lab, rBlack)
+    
+    cListLineOrange = get_contours(ROI_LINE, lab, rOrange)
+    cListLineBlue = get_contours(ROI_LINE, lab, rBlue )
+    
+    cListPillarGreen = get_contours(ROI_MAIN, lab, rGreen)
+    cListPillarRed, dilate = get_red_contours(ROI_MAIN, lab, rRed)
+    
+    cListCoreRed = get_contours(ROI_CENTER, lab, rRed)
+    cListCoreGreen = get_contours(ROI_CENTER, lab, rGreen)
+    cListCoreBlack = get_contours(ROI_BLACK, lab, rBlack)
+
+    # Center black: we'll create a mask and analyze largest contour
+    center_seg_black = lab[ROI_BLACK[1]:ROI_BLACK[3], ROI_BLACK[0]:ROI_BLACK[2]]
+    black_mask = cv2.inRange(center_seg_black, rBlack[0], rBlack[1])
+    black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+    black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+    
+    # Area of Lines
+    areaLineOrange = detect_contour(cListLineOrange, ROI_LINE, frame)
+    areaLineBlue = detect_contour(cListLineBlue, ROI_LINE, frame)
+          
+    # Wall areas
+    areaLeft = detect_contour(cLeftWall, ROI_LEFT_WALL, frame)
+    areaRight = detect_contour(cRightWall, ROI_RIGHT_WALL, frame)
+    areaRightUPP = detect_contour(cRW_UPP, ROI_UPP2, frame)
+    areaLeftUPP = detect_contour(cLW_UPP, ROI_UPP1, frame)
+    
+    # CENTER FOR BACKTRACK
+    areaRedCenter = detect_contour(cListCoreRed, ROI_CENTER, frame)
+    areaGreenCenter = detect_contour(cListCoreGreen, ROI_CENTER, frame)
+    
+    # Compute largest black contour info for ROI_BLACK
+    areaBlackCenter, black_bbox, black_box_h = largest_contour_info(black_mask, ROI_BLACK)
+    
+    
+       # Move servo to 30°
+            
+            
+           # Calculate FPS
+    current_time = time.time()
+    fps = 1 / (current_time - prev_time)
+    prev_time = current_time
+
+    # Display FPS on frame
+    cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30),
+    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                       
+    cv2.imshow('USB CameFd', frame)
+    
+    key = cv2.waitKey(1) & 0xFF
+    
+
+
+
+    if areaRight > areaLeft:
+
+
         while True:
+            print("CLOCK")
+            picam2.start()
+        
+            pillar_detected = None # Stores the current pillar and next one if spotted
+        
+            # Pillar Closest Data
+            closest_pillar_distance = 10000 # relatively large num, meant to be overridee
+            closest_pillar_color = None
+            closest_pillar_x = None
+            closest_pillar_y = None
+            closest_pillar_area = 0
+                
+            # Setup display
             frame = picam2.capture_array()
-            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
-            frame = display_roi(frame,  [ROI_LEFT_WALL, ROI_RIGHT_WALL, ROI_MAIN, ROI_CENTER, ROI_LINE, ROI_BLACK], (255, 204, 0))
+            lab = cv2.cvtColor(frame, cv2.COLOR_BGR2Lab) 
+            frame = display_roi(frame,  [ROI_LEFT_WALL, ROI_RIGHT_WALL, ROI_MAIN, ROI_CENTER, ROI_LINE, ROI_BLACK, ROI_UPP1, ROI_UPP2], (255, 204, 0))
         
             y1 = 0
             y2 = frame.shape[0]
-            cListCoreBlack = get_contours(ROI_BLACK, hsv, rBlack)
+        
+            # Get contours of the Line, wall, pillar
+            cLeftWall = get_contours(ROI_LEFT_WALL, lab, rBlack )
+            cRightWall = get_contours(ROI_RIGHT_WALL, lab, rBlack)
+        
+            cLW_UPP = get_contours(ROI_UPP1, lab, rBlack )
+            cRW_UPP = get_contours(ROI_UPP2, lab, rBlack )
+        
+        
+            cCenterWall = get_contours(ROI_CENTER, lab, rBlack)
+        
+            cListLineOrange = get_contours(ROI_LINE, lab, rOrange)
+            cListLineBlue = get_contours(ROI_LINE, lab, rBlue )
+        
+            cListPillarGreen = get_contours(ROI_MAIN, lab, rGreen)
+            cListPillarRed, dilate = get_red_contours(ROI_MAIN, lab, rRed)
+        
+            cListCoreRed = get_contours(ROI_CENTER, lab, rRed)
+            cListCoreGreen = get_contours(ROI_CENTER, lab, rGreen)
+            cListCoreBlack = get_contours(ROI_BLACK, lab, rBlack)
 
-        # Center black: we'll create a mask and analyze largest contour
-            center_seg_black = hsv[ROI_BLACK[1]:ROI_BLACK[3], ROI_BLACK[0]:ROI_BLACK[2]]
+            # Center black: we'll create a mask and analyze largest contour
+            center_seg_black = lab[ROI_BLACK[1]:ROI_BLACK[3], ROI_BLACK[0]:ROI_BLACK[2]]
             black_mask = cv2.inRange(center_seg_black, rBlack[0], rBlack[1])
             black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_OPEN, kernel, iterations=1)
             black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
 
-            cLeftWall = get_contours(ROI_LEFT_WALL, hsv, rBlack )
-            cRightWall = get_contours(ROI_RIGHT_WALL, hsv, rBlack )
-
-
- 
+        
+            # Area of Lines
+            areaLineOrange = detect_contour(cListLineOrange, ROI_LINE, frame)
+            areaLineBlue = detect_contour(cListLineBlue, ROI_LINE, frame)
+              
+            # Wall areas
             areaLeft = detect_contour(cLeftWall, ROI_LEFT_WALL, frame)
             areaRight = detect_contour(cRightWall, ROI_RIGHT_WALL, frame)
-            frame = picam2.capture_array()
-            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
-            frame = display_roi(frame,  [ROI_LEFT_WALL, ROI_RIGHT_WALL, ROI_MAIN, ROI_CENTER, ROI_LINE, ROI_BLACK], (255, 204, 0))
+            areaRightUPP = detect_contour(cRW_UPP, ROI_UPP2, frame)
+            areaLeftUPP = detect_contour(cLW_UPP, ROI_UPP1, frame)
         
-            y1 = 0
-            y2 = frame.shape[0]
-
-
-
-
-        # Move servo to 30°
-        if areaLeft >= 40:
-            servo_angle_queue.put(30)
-
-            # Start motor at 0.1 speed CW
-            pwm.Drive(DC_MOTOR_PWM1, 0.1, "CW", pwm)
-            
-            if areaLeft == areaRight:
-                pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
-
-
-        print("Test complete.")
-        """
-
-
-
-
-    #----- Parallel Parking Loop------
-    
-    while True:
-        picam2.start()
+            # CENTER FOR BACKTRACK
+            areaRedCenter = detect_contour(cListCoreRed, ROI_CENTER, frame)
+            areaGreenCenter = detect_contour(cListCoreGreen, ROI_CENTER, frame)
         
-        pillar_detected = None # Stores the current pillar and next one if spotted
-        
-        # Pillar Closest Data
-        closest_pillar_distance = 10000 # relatively large num, meant to be overridee
-        closest_pillar_color = None
-        closest_pillar_x = None
-        closest_pillar_y = None
-        closest_pillar_area = 0
-                
-        # Setup display
-        frame = picam2.capture_array()
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
-        frame = display_roi(frame,  [ROI_LEFT_WALL, ROI_RIGHT_WALL, ROI_MAIN, ROI_CENTER, ROI_LINE, ROI_BLACK, ROI_UPP1, ROI_UPP2], (255, 204, 0))
-        
-        y1 = 0
-        y2 = frame.shape[0]
-        
-        # Get contours of the Line, wall, pillar
-        cLeftWall = get_contours(ROI_LEFT_WALL, hsv, rBlack )
-        cRightWall = get_contours(ROI_RIGHT_WALL, hsv, rBlack)
-        
-        cLW_UPP = get_contours(ROI_UPP1, hsv, rBlack )
-        cRW_UPP = get_contours(ROI_UPP2, hsv, rBlack )
+            # Compute largest black contour info for ROI_BLACK
+            areaBlackCenter, black_bbox, black_box_h = largest_contour_info(black_mask, ROI_BLACK)
         
         
-        cCenterWall = get_contours(ROI_CENTER, hsv, rBlack)
-        
-        cListLineOrange = get_contours(ROI_LINE, hsv, rOrange)
-        cListLineBlue = get_contours(ROI_LINE, hsv, rBlue )
-        
-        cListPillarGreen = get_contours(ROI_MAIN, hsv, rGreen)
-        cListPillarRed, dilate = get_red_contours(ROI_MAIN, hsv, rRed, rRed2)
-        
-        cListCoreRed = get_contours(ROI_CENTER, hsv, rRed)
-        cListCoreGreen = get_contours(ROI_CENTER, hsv, rGreen)
-        cListCoreBlack = get_contours(ROI_BLACK, hsv, rBlack)
-
-        # Center black: we'll create a mask and analyze largest contour
-        center_seg_black = hsv[ROI_BLACK[1]:ROI_BLACK[3], ROI_BLACK[0]:ROI_BLACK[2]]
-        black_mask = cv2.inRange(center_seg_black, rBlack[0], rBlack[1])
-        black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_OPEN, kernel, iterations=1)
-        black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
-
-        
-        # Area of Lines
-        areaLineOrange = detect_contour(cListLineOrange, ROI_LINE, frame)
-        areaLineBlue = detect_contour(cListLineBlue, ROI_LINE, frame)
-              
-        # Wall areas
-        areaLeft = detect_contour(cLeftWall, ROI_LEFT_WALL, frame)
-        areaRight = detect_contour(cRightWall, ROI_RIGHT_WALL, frame)
-        areaRightUPP = detect_contour(cRW_UPP, ROI_UPP2, frame)
-        areaLeftUPP = detect_contour(cLW_UPP, ROI_UPP1, frame)
-        
-        # CENTER FOR BACKTRACK
-        areaRedCenter = detect_contour(cListCoreRed, ROI_CENTER, frame)
-        areaGreenCenter = detect_contour(cListCoreGreen, ROI_CENTER, frame)
-        
-        # Compute largest black contour info for ROI_BLACK
-        areaBlackCenter, black_bbox, black_box_h = largest_contour_info(black_mask, ROI_BLACK)
-        
-        
-           # Move servo to 30°
+               # Move servo to 30°
                 
                 
-               # Calculate FPS
-        current_time = time.time()
-        fps = 1 / (current_time - prev_time)
-        prev_time = current_time
+                   # Calculate FPS
+            current_time = time.time()
+            fps = 1 / (current_time - prev_time)
+            prev_time = current_time
 
-        # Display FPS on frame
-        cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30),
-        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # Display FPS on frame
+            cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                            
-        cv2.imshow('USB CameFd', frame)
+            cv2.imshow('USB CameFd', frame)
         
-        key = cv2.waitKey(1) & 0xFF
+            key = cv2.waitKey(1) & 0xFF
         
-        # ----- RED PILLAR DETECTION ------
+            # ----- RED PILLAR DETECTION ------
         
-        # Stores Red Pillar Data: area, cords, and distance
-        PillarsRed = filter_pillars(cListPillarRed, frame, closest_pillar_distance, pillar_threshold, ROI_MAIN)
+            # Stores Red Pillar Data: area, cords, and distance
+            PillarsRed = filter_pillars(cListPillarRed, frame, closest_pillar_distance, pillar_threshold, ROI_MAIN)
        
-        for pillar in PillarsRed:
+            for pillar in PillarsRed:
             
-            # ignore the pillar if it is not the closest (determined by distance)
-            if (pillar["area"] < closest_pillar_area * 0.9) and (pillar["distance"] > closest_pillar_distance * 0.9):
-                continue
+                # ignore the pillar if it is not the closest (determined by distance)
+                if (pillar["area"] < closest_pillar_area * 0.9) and (pillar["distance"] > closest_pillar_distance * 0.9):
+                    continue
                 
-            # CASE A: Pillar is too far# pillar["y"] + pillar["h"]) >= 370 and 
-            if pillar["x"] < redTarget:
-                previous_pillar = "red"
-                print("PILLAR HAS BEEN PASSED")
-                pillar_detected  = False
-                continue 
+                # CASE A: Pillar is too far# pillar["y"] + pillar["h"]) >= 370 and 
+                if pillar["x"] < redTarget:
+                    previous_pillar = "red"
+                    print("PILLAR HAS BEEN PASSED")
+                    pillar_detected  = False
+                    continue 
                 
-            # CASE B: pillar is passed
-            elif (pillar["y"] + pillar["h"] ) < 155:
-                pillar_detected  = False
-                print("Pillar too far")
-                continue
+                # CASE B: pillar is passed
+                elif (pillar["y"] + pillar["h"] ) < 155:
+                    pillar_detected  = False
+                    print("Pillar too far")
+                    continue
             
-            # CASE C: Update Pillar data
-            else:
-                closest_pillar_distance = pillar["distance"]
-                closest_pillar_color = "red"
-                closest_pillar_x = pillar["x"]
-                closest_pillar_y = pillar["y"]
-                closest_pillar_area = pillar["area"]
-                pillar_detected = True
-                #print("Distance: ", closest_pillar_distance, " Color: ", closest_pillar_color, " Cords: ", closest_pillar_x,closest_pillar_y, " AREA: ", closest_pillar_area)
+                # CASE C: Update Pillar data
+                else:
+                    closest_pillar_distance = pillar["distance"]
+                    closest_pillar_color = "red"
+                    closest_pillar_x = pillar["x"]
+                    closest_pillar_y = pillar["y"]
+                    closest_pillar_area = pillar["area"]
+                    pillar_detected = True
+                    #print("Distance: ", closest_pillar_distance, " Color: ", closest_pillar_color, " Cords: ", closest_pillar_x,closest_pillar_y, " AREA: ", closest_pillar_area)
 
                         
         
-        # ----- GREEN PILLAR DETECTION ------
+            # ----- GREEN PILLAR DETECTION ------
         
-        PillarsGreen = filter_pillars(cListPillarGreen, frame, closest_pillar_distance, pillar_threshold, ROI_MAIN)
+            PillarsGreen = filter_pillars(cListPillarGreen, frame, closest_pillar_distance, pillar_threshold, ROI_MAIN)
         
-        for pillar in PillarsGreen:
+            for pillar in PillarsGreen:
 
-            # ignore the pillar if it is not the closest (determined by distance)
-            if (pillar["area"] < closest_pillar_area * 0.9) and (pillar["distance"] > closest_pillar_distance * 0.9):
-                continue
+                # ignore the pillar if it is not the closest (determined by distance)
+                if (pillar["area"] < closest_pillar_area * 0.9) and (pillar["distance"] > closest_pillar_distance * 0.9):
+                    continue
 
-            # CASE A: pillar is close and pass the target zone horizontally #pillar["y"] + pillar["h"]) >= 370 and
-            if pillar["x"] > greenTarget:
-                previous_pillar = "green"
-                print("PILLAR HAS BEEN PASSED")
-                pillar_detected = False
-                continue 
+                # CASE A: pillar is close and pass the target zone horizontally #pillar["y"] + pillar["h"]) >= 370 and
+                if pillar["x"] > greenTarget:
+                    previous_pillar = "green"
+                    print("PILLAR HAS BEEN PASSED")
+                    pillar_detected = False
+                    continue 
                 
-            # CASE B: bottom_y_cord of the pillar is too far
-            elif (pillar["y"] + pillar["h"] ) < 155: # Soft mark for too far (frame is 100-400 on the y)
-                print("Pillar too far")
-                pillar_detected  = False
-                continue 
+                # CASE B: bottom_y_cord of the pillar is too far
+                elif (pillar["y"] + pillar["h"] ) < 155: # Soft mark for too far (frame is 100-400 on the y)
+                    print("Pillar too far")
+                    pillar_detected  = False
+                    continue 
             
-            # CASE C: Update Pillar data
-            else:
-                closest_pillar_distance = pillar["distance"]
-                closest_pillar_color = "green"
-                closest_pillar_x = pillar["x"]
-                closest_pillar_y = pillar["y"]
-                closest_pillar_area = pillar["area"]
-                pillar_detected = True
-                #print("Distance: ", closest_pillar_distance, " Color: ", closest_pillar_color, " Cords: ", closest_pillar_x,closest_pillar_y, " AREA: ", closest_pillar_area)
+                # CASE C: Update Pillar data
+                else:
+                    closest_pillar_distance = pillar["distance"]
+                    closest_pillar_color = "green"
+                    closest_pillar_x = pillar["x"]
+                    closest_pillar_y = pillar["y"]
+                    closest_pillar_area = pillar["area"]
+                    pillar_detected = True
+                    #print("Distance: ", closest_pillar_distance, " Color: ", closest_pillar_color, " Cords: ", closest_pillar_x,closest_pillar_y, " AREA: ", closest_pillar_area)
    
         
                        
-        # ---- TARGET SELECTION ----
+            # ---- TARGET SELECTION ----
         
         
-        print(closest_pillar_area)
+            print(closest_pillar_area)
         
         
-        if closest_pillar_color == "red" and closest_pillar_area > Red_grac_const:
-            target = redTarget
-            cv2.line(frame, (redTarget, y1), (redTarget, y2), (0, 0, 255), 2)
-        elif closest_pillar_color == "green" and closest_pillar_area > Green_grav_const:
-            target = greenTarget
-            cv2.line(frame, (greenTarget, y1), (greenTarget, y2), (0, 255, 0), 2)
-        else:
-            # Treat as "no pillar" so wall/black logic can run
-            target = 0
-
-
-
-        if areaRight >= 40:
+            if closest_pillar_color == "red" and closest_pillar_area > Red_grac_const:
+                target = redTarget
+                cv2.line(frame, (redTarget, y1), (redTarget, y2), (0, 0, 255), 2)
+            elif closest_pillar_color == "green" and closest_pillar_area > Green_grav_const:
+                target = greenTarget
+                cv2.line(frame, (greenTarget, y1), (greenTarget, y2), (0, 255, 0), 2)
+            else:
+                # Treat as "no pillar" so wall/black logic can run
+                target = 0
+                
             servo_angle_queue.put(-30)
 
             # Start motor at 0.1 speed CW
             pwm.Drive(DC_MOTOR_PWM1, 0.45, "CW", pwm)
+
+
+
+
+            print("ALMOST")
             
             
             #areaRight > 2000 and areaRight < 10000 and areaLeft > 2000:
-            if areaLeftUPP >= 800 and areaLeftUPP <= 8000: 
+            if areaLeftUPP >= 1 and areaLeftUPP <= 8000: 
+                print("AHA")
                 pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
                 #pwm.Drive(DC_MOTOR_PWM1, 0.45, "CW", pwm)
                 print(closest_pillar_color)
                 print("A")
-                print(areaRight)
+                print(areaLeftUPP)
              
                 
  
                 if closest_pillar_color == None or closest_pillar_color == "red":
                     servo_angle_queue.put(30)	 
-                    pwm.Drive(DC_MOTOR_PWM1, 0.5, "CW", pwm)
-                    if areaRight > areaLeft:
-                        pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
-                        pwm.Drive(DC_MOTOR_PWM1, 0.5, "CW", pwm)
+                    pwm.Drive_time(DC_MOTOR_PWM1, 0.5, "CW", 1.0, pwm)
+                    pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
+   #             pwm.Drive(DC_MOTOR_PWM1, 0.5, "CW", pwm)
 
-                        if areaLineBlue > line_threshold:
-                            servo_angle_queue.put(-30)	 
-                            pwm.Drive_time(DC_MOTOR_PWM1, 1, "CW", 0.5, pwm)
-	
-							
+#                      if areaLineBlue > line_threshold:
+#                         servo_angle_queue.put(-30)	 
+#                        pwm.Drive_time(DC_MOTOR_PWM1, 1, "CW", 0.5, pwm)
+
                         
-                        
-                                        
+                    
+                    
+                                    
                 elif closest_pillar_color == "green":
                     servo_angle_queue.put(0)	 
                     pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "CW", 1.0, pwm)
-                    servo_angle_queue.put(30)	 
+                    servo_angle_queue.put(15)	 
+                    pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "Cw", 1.0, pwm)
+
+
+
+                else:
+                    print("Hath, thy error aprroaches me")
+                
+                
+            break
+
+                
+                
+
+
+
+    
+    
+    elif areaLeft > areaRight:
+        print("COUNTER")
+        while True:
+            picam2.start()
+        
+            pillar_detected = None # Stores the current pillar and next one if spotted
+        
+            # Pillar Closest Data
+            closest_pillar_distance = 10000 # relatively large num, meant to be overridee
+            closest_pillar_color = None
+            closest_pillar_x = None
+            closest_pillar_y = None
+            closest_pillar_area = 0
+                
+            # Setup display
+            frame = picam2.capture_array()
+            lab = cv2.cvtColor(frame, cv2.COLOR_BGR2Lab) 
+            frame = display_roi(frame,  [ROI_LEFT_WALL, ROI_RIGHT_WALL, ROI_MAIN, ROI_CENTER, ROI_LINE, ROI_BLACK, ROI_UPP1, ROI_UPP2], (255, 204, 0))
+        
+            y1 = 0
+            y2 = frame.shape[0]
+        
+            # Get contours of the Line, wall, pillar
+            cLeftWall = get_contours(ROI_LEFT_WALL, lab, rBlack )
+            cRightWall = get_contours(ROI_RIGHT_WALL, lab, rBlack)
+        
+            cLW_UPP = get_contours(ROI_UPP1, lab, rBlack )
+            cRW_UPP = get_contours(ROI_UPP2, lab, rBlack )
+        
+        
+            cCenterWall = get_contours(ROI_CENTER, lab, rBlack)
+        
+            cListLineOrange = get_contours(ROI_LINE, lab, rOrange)
+            cListLineBlue = get_contours(ROI_LINE, lab, rBlue )
+        
+            cListPillarGreen = get_contours(ROI_MAIN, lab, rGreen)
+            cListPillarRed, dilate = get_red_contours(ROI_MAIN, lab, rRed)
+        
+            cListCoreRed = get_contours(ROI_CENTER, lab, rRed)
+            cListCoreGreen = get_contours(ROI_CENTER, lab, rGreen)
+            cListCoreBlack = get_contours(ROI_BLACK, lab, rBlack)
+
+            # Center black: we'll create a mask and analyze largest contour
+            center_seg_black = lab[ROI_BLACK[1]:ROI_BLACK[3], ROI_BLACK[0]:ROI_BLACK[2]]
+            black_mask = cv2.inRange(center_seg_black, rBlack[0], rBlack[1])
+            black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+            black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+        
+            # Area of Lines
+            areaLineOrange = detect_contour(cListLineOrange, ROI_LINE, frame)
+            areaLineBlue = detect_contour(cListLineBlue, ROI_LINE, frame)
+              
+            # Wall areas
+            areaLeft = detect_contour(cLeftWall, ROI_LEFT_WALL, frame)
+            areaRight = detect_contour(cRightWall, ROI_RIGHT_WALL, frame)
+            areaRightUPP = detect_contour(cRW_UPP, ROI_UPP2, frame)
+            areaLeftUPP = detect_contour(cLW_UPP, ROI_UPP1, frame)
+        
+            # CENTER FOR BACKTRACK
+            areaRedCenter = detect_contour(cListCoreRed, ROI_CENTER, frame)
+            areaGreenCenter = detect_contour(cListCoreGreen, ROI_CENTER, frame)
+        
+            # Compute largest black contour info for ROI_BLACK
+            areaBlackCenter, black_bbox, black_box_h = largest_contour_info(black_mask, ROI_BLACK)
+        
+        
+               # Move servo to 30°
+                
+                
+                   # Calculate FPS
+            current_time = time.time()
+            fps = 1 / (current_time - prev_time)
+            prev_time = current_time
+
+            # Display FPS on frame
+            cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                           
+            cv2.imshow('USB CameFd', frame)
+        
+            key = cv2.waitKey(1) & 0xFF
+        
+            # ----- RED PILLAR DETECTION ------
+        
+            # Stores Red Pillar Data: area, cords, and distance
+            PillarsRed = filter_pillars(cListPillarRed, frame, closest_pillar_distance, pillar_threshold, ROI_MAIN)
+       
+            for pillar in PillarsRed:
+            
+                # ignore the pillar if it is not the closest (determined by distance)
+                if (pillar["area"] < closest_pillar_area * 0.9) and (pillar["distance"] > closest_pillar_distance * 0.9):
+                    continue
+                
+                # CASE A: Pillar is too far# pillar["y"] + pillar["h"]) >= 370 and 
+                if pillar["x"] < redTarget:
+                    previous_pillar = "red"
+                    print("PILLAR HAS BEEN PASSED")
+                    pillar_detected  = False
+                    continue 
+                
+                # CASE B: pillar is passed
+                elif (pillar["y"] + pillar["h"] ) < 155:
+                    pillar_detected  = False
+                    print("Pillar too far")
+                    continue
+            
+                # CASE C: Update Pillar data
+                else:
+                    closest_pillar_distance = pillar["distance"]
+                    closest_pillar_color = "red"
+                    closest_pillar_x = pillar["x"]
+                    closest_pillar_y = pillar["y"]
+                    closest_pillar_area = pillar["area"]
+                    pillar_detected = True
+                    #print("Distance: ", closest_pillar_distance, " Color: ", closest_pillar_color, " Cords: ", closest_pillar_x,closest_pillar_y, " AREA: ", closest_pillar_area)
+
+                        
+        
+            # ----- GREEN PILLAR DETECTION ------
+        
+            PillarsGreen = filter_pillars(cListPillarGreen, frame, closest_pillar_distance, pillar_threshold, ROI_MAIN)
+        
+            for pillar in PillarsGreen:
+
+                # ignore the pillar if it is not the closest (determined by distance)
+                if (pillar["area"] < closest_pillar_area * 0.9) and (pillar["distance"] > closest_pillar_distance * 0.9):
+                    continue
+
+                # CASE A: pillar is close and pass the target zone horizontally #pillar["y"] + pillar["h"]) >= 370 and
+                if pillar["x"] > greenTarget:
+                    previous_pillar = "green"
+                    print("PILLAR HAS BEEN PASSED")
+                    pillar_detected = False
+                    continue 
+                
+                # CASE B: bottom_y_cord of the pillar is too far
+                elif (pillar["y"] + pillar["h"] ) < 155: # Soft mark for too far (frame is 100-400 on the y)
+                    print("Pillar too far")
+                    pillar_detected  = False
+                    continue 
+            
+                # CASE C: Update Pillar data
+                else:
+                    closest_pillar_distance = pillar["distance"]
+                    closest_pillar_color = "green"
+                    closest_pillar_x = pillar["x"]
+                    closest_pillar_y = pillar["y"]
+                    closest_pillar_area = pillar["area"]
+                    pillar_detected = True
+                    #print("Distance: ", closest_pillar_distance, " Color: ", closest_pillar_color, " Cords: ", closest_pillar_x,closest_pillar_y, " AREA: ", closest_pillar_area)
+   
+        
+                       
+            # ---- TARGET SELECTION ----
+        
+        
+            print(closest_pillar_area)
+        
+        
+            if closest_pillar_color == "red" and closest_pillar_area > Red_grac_const:
+                target = redTarget
+                cv2.line(frame, (redTarget, y1), (redTarget, y2), (0, 0, 255), 2)
+            elif closest_pillar_color == "green" and closest_pillar_area > Green_grav_const:
+                target = greenTarget
+                cv2.line(frame, (greenTarget, y1), (greenTarget, y2), (0, 255, 0), 2)
+            else:
+                # Treat as "no pillar" so wall/black logic can run
+                target = 0
+
+
+
+            print("ALMOST")
+            
+            
+                    
+                    
+            servo_angle_queue.put(30)
+
+            # Start motor at 0.1 speed CW
+            pwm.Drive(DC_MOTOR_PWM1, 0.45, "CW", pwm)
+            print("ALMOST(1)")
+            
+            
+            #areaRight > 2000 and areaRight < 10000 and areaLeft > 2000:
+            if areaRightUPP >= 1 and areaRightUPP <= 8000: 
+                print("AHA(CW)")
+                pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
+                #pwm.Drive(DC_MOTOR_PWM1, 0.45, "CW", pwm)
+                print(closest_pillar_color)
+                print(areaRightUPP)
+             
+                
+ 
+                if closest_pillar_color == None or closest_pillar_color == "green":
+                    print("N")
+                    servo_angle_queue.put(-30)	 
+                    pwm.Drive_time(DC_MOTOR_PWM1, 0.5, "CW", 1.0, pwm)
+                    pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
+                        
+                                        
+                elif closest_pillar_color == "red":
+                    print("R")
+                    servo_angle_queue.put(0)	 
+                    pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "CW", 1.0, pwm)
+                    servo_angle_queue.put(-30)	 
                     pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
 
 
 
                 else:
-                    print("Hath, thy block aprroaches me")
-	
-                
-
-					
+                    print("Hath, thy error aprroaches me")
                 
                 
-                break
+            break
 
+  #  i += 2
 
-        
+    
 
 
 
     # ----- MAIN LOOP --------
     time.sleep(1)
-    unparalleled_Parking()
     motor_command_queue.put("drive") 
     servo_angle_queue.put(0)
     while True:
@@ -781,29 +1035,29 @@ if __name__ == '__main__':
                 
         # Setup display
         frame = picam2.capture_array()
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
+        lab = cv2.cvtColor(frame, cv2.COLOR_BGR2Lab) 
         frame = display_roi(frame,  [ROI_LEFT_WALL, ROI_RIGHT_WALL, ROI_MAIN, ROI_CENTER, ROI_LINE, ROI_BLACK], (255, 204, 0))
         
         y1 = 0
         y2 = frame.shape[0]
         
         # Get contours of the Line, wall, pillar
-        cLeftWall = get_contours(ROI_LEFT_WALL, hsv, rBlack )
-        cRightWall = get_contours(ROI_RIGHT_WALL, hsv, rBlack )
-        cCenterWall = get_contours(ROI_CENTER, hsv, rBlack)
+        cLeftWall = get_contours(ROI_LEFT_WALL, lab, rBlack )
+        cRightWall = get_contours(ROI_RIGHT_WALL, lab, rBlack )
+        cCenterWall = get_contours(ROI_CENTER, lab, rBlack)
         
-        cListLineOrange = get_contours(ROI_LINE, hsv, rOrange)
-        cListLineBlue = get_contours(ROI_LINE, hsv, rBlue )
+        cListLineOrange = get_contours(ROI_LINE, lab, rOrange)
+        cListLineBlue = get_contours(ROI_LINE, lab, rBlue )
         
-        cListPillarGreen = get_contours(ROI_MAIN, hsv, rGreen)
-        cListPillarRed, dilate = get_red_contours(ROI_MAIN, hsv, rRed, rRed2)
+        cListPillarGreen = get_contours(ROI_MAIN, lab, rGreen)
+        cListPillarRed, dilate = get_red_contours(ROI_MAIN, lab, rRed)
         
-        cListCoreRed = get_contours(ROI_CENTER, hsv, rRed)
-        cListCoreGreen = get_contours(ROI_CENTER, hsv, rGreen)
-        cListCoreBlack = get_contours(ROI_BLACK, hsv, rBlack)
+        cListCoreRed = get_contours(ROI_CENTER, lab, rRed)
+        cListCoreGreen = get_contours(ROI_CENTER, lab, rGreen)
+        cListCoreBlack = get_contours(ROI_BLACK, lab, rBlack)
 
         # Center black: we'll create a mask and analyze largest contour
-        center_seg_black = hsv[ROI_BLACK[1]:ROI_BLACK[3], ROI_BLACK[0]:ROI_BLACK[2]]
+        center_seg_black = lab[ROI_BLACK[1]:ROI_BLACK[3], ROI_BLACK[0]:ROI_BLACK[2]]
         black_mask = cv2.inRange(center_seg_black, rBlack[0], rBlack[1])
         black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_OPEN, kernel, iterations=1)
         black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
@@ -921,15 +1175,19 @@ if __name__ == '__main__':
         
         
         # ------- TURNING LOGIC ------
+        
+        
+        
+        
         if track_Dir is None and line_released and not waiting_for_release:
             if areaLineBlue > line_threshold: 
                 track_Dir = "left"
-                line_seen = False  # Reset for this turn
+                line_released = False  # Reset for this turn
                 print(track_Dir)
 
             elif areaLineOrange > line_threshold:
                 track_Dir = "right"
-                line_seen = False
+                line_released = False
                 print(track_Dir)
                 
 
@@ -937,18 +1195,21 @@ if __name__ == '__main__':
         if track_Dir == "right" and areaLineOrange > line_threshold:
             if areaLineBlue < line_threshold and closest_pillar_color == "green":
                 angle += (turn_Deg + 8)
-                print("Left")
+                print("Rft")
             elif areaLineBlue < line_threshold and closest_pillar_color == "red":
                 angle += (turn_Deg + 4)
-                print("Left")
+                print("R")
             elif areaLineBlue < line_threshold and closest_pillar_color == None:
                 angle += (turn_Deg + 8)
-                print("Left")
+                print("R")
             elif areaLineBlue >= line_threshold:
                 angle += (turn_Deg - turn_Deg)
-                print("Left")
-            else:
-                print(turn_counter)
+                print("R")
+                turn_End = True
+                turn_counter += 1
+                print(f"Turn {turn_counter} (RIGHT)")
+                track_Dir = None 
+                turn_just_ended = True
                 
        # if track_Dir == "right" and areaLineOrange > line_threshold:
         #    turn_counter += 1
@@ -968,18 +1229,22 @@ if __name__ == '__main__':
                 greenTarget = 550
                 angle -= (turn_Deg - 4)
                 print("Left")
-            elif areaLineOrange <= line_threshold and closest_pillar_color == "red":
-                angle -= (turn_Deg - 8)
+            elif areaLineOrange < line_threshold and closest_pillar_color == "red":
+                ang = angle - 15
+                angle = ang
                 print("Left")
-            elif areaLineOrange <= line_threshold and closest_pillar_color == None:
+            elif areaLineOrange < line_threshold and closest_pillar_color == None:
                 angle -= (turn_Deg - 8)
                 print("Left")
             elif areaLineOrange >= line_threshold:
-                angle += (turn_Deg - turn_Deg)
-                print("Left")
-            else:
                 kp = 0.045
-                greenTarget = 620
+                greenTarget = 600
+                turn_End = True
+                turn_counter += 1
+                print(f"Turn {turn_counter} (LEFT)")
+                track_Dir = None 
+                turn_just_ended = True
+
                 
                 
 
@@ -1117,6 +1382,14 @@ if __name__ == '__main__':
                 motor_command_queue.put("drive")
                 backtrack_active = False
             
+            
+            
+            
+        if turn_just_ended:
+            if areaLineBlue < line_threshold and areaLineOrange < line_threshold:
+                line_released = True
+                turn_just_ended = False
+                print("line Cleared")
 
 
 		
@@ -1138,13 +1411,6 @@ if __name__ == '__main__':
         key = cv2.waitKey(1) & 0xFF
         
         
-        if turn_counter == 12:
-            break
-            motor_command_queue.put("drive")
-            time.sleep (1.5)
-        else:
-            turn_counter += 0
-
         if key == ord('d'):
             motor_command_queue.put("stop")
             servo_angle_queue.put(None)
@@ -1156,6 +1422,14 @@ if __name__ == '__main__':
             cv2.destroyAllWindows()
             #break
               # Make sure to break out of the while loop
+              
+              
+        if turn_counter >= 12:
+            print("Completed 12 turns, stopping.")
+            motor_command_queue.put("stop")
+            servo_angle_queue.put(None)
+            break
+
             
     t1.join()
     t2.join()	
