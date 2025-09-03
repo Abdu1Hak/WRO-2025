@@ -1,3 +1,4 @@
+# Import Necessary Libraries and Modules
 import cv2
 from time import sleep 
 import numpy as np
@@ -11,39 +12,32 @@ import smbus
 import board
 import busio
 import adafruit_vl53l0x
+import RPi.GPIO as GPIO
 
-SUBADR1            = 0x02
-SUBADR2            = 0x03
-SUBADR3            = 0x04
+
+# declare the pin out
 MODE1              = 0x00
-MODE2              = 0x01
 PRESCALE           = 0xFE
 LED0_ON_L          = 0x06
 LED0_ON_H          = 0x07
 LED0_OFF_L         = 0x08
 LED0_OFF_H         = 0x09
-ALLLED_ON_L        = 0xFA
-ALLLED_ON_H        = 0xFB
-ALLLED_OFF_L       = 0xFC
-ALLLED_OFF_H       = 0xFD
-  
-SERVO_MOTOR_PWM3        = 6
-SERVO_MOTOR_PWM4        = 7
-SERVO_MOTOR_PWM5        = 8
-SERVO_MOTOR_PWM6        = 9
-SERVO_MOTOR_PWM7        = 10
-SERVO_MOTOR_PWM8        = 11
-
+SERVO_MOTOR_PWM3 = 6
 DC_MOTOR_PWM1        = 0
 DC_MOTOR_INA1        = 2
 DC_MOTOR_INA2        = 1
+BUTTON_PIN = 17
+# Pin 9, GND 11 on the HAT
 
-DC_MOTOR_PWM2        = 5
-DC_MOTOR_INB1        = 3
-DC_MOTOR_INB2        = 4
+# Button Config
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Pull-up resistor enabled
 
+
+# Declare an I2C communication protocol with the Board and Hat
 i2c = busio.I2C(board.SCL, board.SDA)
 
+# Setup the Camera with necessary configurations
 picam2 = Picamera2()
 picam2.preview_configuration.main.size =(640,480)
 picam2.preview_configuration.main.format = "RGB888"
@@ -54,9 +48,57 @@ picam2.start()
 
 
 
+
+# Create queues for angle values & motor commands
+motor_command_queue = Queue()
+servo_angle_queue = Queue()
+
+
+# Function to retreive the latest command from the queue, execute it, and update variables
+def motor_drive(DC_SPEED):
+	current_command = None
+	while True:
+		command = motor_command_queue.get()
+		if command is None:
+			break
+	
+		if command == "drive":
+			print("Drive")
+			pwm.Drive(DC_MOTOR_PWM1, DC_SPEED, "CW", pwm)
+		if command == "backtrack":
+			pwm.Drive(DC_MOTOR_PWM1, DC_SPEED, "CCW", pwm)
+			print("BACKTRACK...")
+		if command == "stop":
+			print("Stop")
+			pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
+	
+		current_command = command
+	time.sleep(0.01)
+
+# Function to retreive the latest angle from the queue, execute it, and update variables  
+def servo_move():
+	current_angle = None
+	while True:
+		angle = servo_angle_queue.get()  # Wait for new command
+
+		if angle is None:
+			pwm.DisableServo(SERVO_MOTOR_PWM3)
+			current_angle = None
+			#print("Servo disabled")
+			break
+		else:
+			#print("ANGLE VALUE:", angle)
+			pwm.SweepServo(SERVO_MOTOR_PWM3, angle)
+			current_angle = angle
+
+
+
+# Class for the Motor / Servo Driver
 class PCA9685:
     def __init__(self):
+        # Opens the i2c bus on the pi
         self.i2c = smbus.SMBus(1)
+        # Talks to the PCA9685 at a device address
         self.dev_addr = 0x7f
         self.write_reg(MODE1, 0x00)
 
@@ -89,32 +131,15 @@ class PCA9685:
         self.write_reg(LED0_OFF_L+4*ch, off & 0xFF)
         self.write_reg(LED0_OFF_H+4*ch, off >> 8)
 
-    def setServoPulse(self, channel, pulse):
-       pulse = pulse*4096/20000        #PWM frequency is 50HZ,the period is 20000us=20ms
+    def setServoPulse(self, channel, pulse): # Given a pulse in microseconds, use it to simulate a digital high or low command
+       pulse = pulse*4096/20000       
        self.setPWM(channel, 0, int(pulse))
-              
-    def Drive_time(self, channel, percent, wise, tim, pwm):
-        pulse = int(15000 * percent)
-        pwm.setServoPulse(channel, pulse)
-        if wise == "CW":
-            pwm.setServoPulse(DC_MOTOR_INA1,19999) # set INA1 H 
-            pwm.setServoPulse(DC_MOTOR_INA2,0) # set INA2 L
-        elif wise == "CCW":
-            pwm.setServoPulse(DC_MOTOR_INA1,0) # set INA1 H 
-            pwm.setServoPulse(DC_MOTOR_INA2,19999) # set INA2 L
-        elif wise == "Stop":
-            pwm.setServoPulse(DC_MOTOR_INA1,19999) # set INA1 H 
-            pwm.setServoPulse(DC_MOTOR_INA2,19999) # set INA2 L
-        elif wise == "Coast":
-            pwm.setServoPulse(DC_MOTOR_INA1,0) # set INA1 H 
-            pwm.setServoPulse(DC_MOTOR_INA2,0) # set INA2 L
-        else:
-            print("Error, invalid entry, if you have forgotten, options are: 1)CW 2)CCW 3)Stop or 4)Coast")
-        time.sleep(tim)
         
     def Drive(self, channel, percent, wise, pwm):
-        pulse = int(15000 * percent)
+        pulse = int(15000 * percent) # multiply the percent (between 0.0 to 1.0) with the maximum PWM pulse
         pwm.setServoPulse(channel, pulse)
+
+        # Manipulate the directions
         if wise == "CW":
             pwm.setServoPulse(DC_MOTOR_INA1,19999) # set INA1 H 
             pwm.setServoPulse(DC_MOTOR_INA2,0) # set INA2 L
@@ -128,21 +153,19 @@ class PCA9685:
             pwm.setServoPulse(DC_MOTOR_INA1,0) # set INA1 H 
             pwm.setServoPulse(DC_MOTOR_INA2,0) # set INA2 L
         else:
-            print("Error, invalid entry, if you have forgotten, options are: 1)CW 2)CCW 3)Stop or 4)Coast")
-        #time.sleep(tim)
+            print("Error, invalid entry, if you have forgotten, options are: 1)CW 2)CCW 3)Stop or 4)Coast")     
         
-        
-    def MoveServo(self, channel, angle, delay=0.02):
-        physical_angle = angle - 50
+    def MoveServo(self, channel, angle, delay=0.02): # Converts the angle to a pulse width and moves the servo
+        physical_angle = angle - 50 # Add a calibrated offset to ensure that 0 is infact center of the servo, and not -50. This is based on the servo and its mounted position.
 
-        physical_angle = max(-90, min(90, physical_angle))
+        physical_angle = max(-90, min(90, physical_angle)) # Clamp the angle
     
-        pulse = int(1500 + (physical_angle / 90.0) * 1000)
+        pulse = int(1500 + (physical_angle / 90.0) * 1000) # convert it to a pulse width 
 
-        self.setServoPulse(channel, pulse)
+        self.setServoPulse(channel, pulse) # -> Formward the pulse
         time.sleep(delay)
 
-    def SweepServo(self, channel, end_angle, step=1, delay=0.02):
+    def SweepServo(self, channel, end_angle, step=1, delay=0.02): # channel: PCA outpit, end angle: target angle, step:..., delay: how long to wait after each step
         """
         Smoothly sweeps from last known logical angle to the end_angle.
         All angles are in user input degrees and offset by -37 internally.
@@ -165,61 +188,15 @@ class PCA9685:
         self._servo_positions[channel] = end_angle
             
     def DisableServo(self, channel):
-        """
-        Disables the PWM signal to the servo on the specified channel.
-        This will stop holding torque and let it float freely.
-        """
+        
         self.setPWM(channel, 0, 0)
         
-    def TOF():
-        distance_mm = vl53.range
-        
-        """
-        If we ever choose to or need to use a time of flight sensor, this is the function to utilize it.
-        """      
-        
+
+# Create a class object and set the frequency
 pwm = PCA9685()
 pwm.setPWMFreq(50)
-motor_command_queue = Queue()
-servo_angle_queue = Queue()
 
-def motor_drive():
-    current_command = None
-    while True:
-        command = motor_command_queue.get()
-        if command is None:
-            break
-        
-        if command == "drive":
-            print("Drive")
-            pwm.Drive(DC_MOTOR_PWM1, 0.6, "CW", pwm)
-        if command == "backtrack":
-            pwm.Drive(DC_MOTOR_PWM1, 1.0, "CCW", pwm)
-            print("BACKTRACK...")
-        if command == "stop":
-            print("Stop")
-            pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
-        
-        current_command = command
-    time.sleep(0.01)
-    
-def servo_move():
-    current_angle = None
-    while True:
-        angle = servo_angle_queue.get()  # Wait for new command
-
-        if angle is None:
-            pwm.DisableServo(SERVO_MOTOR_PWM3)
-            current_angle = None
-            print("Servo disabled")
-            break
-        else:
-            #print("ANGLE VALUE:", angle)
-            pwm.SweepServo(SERVO_MOTOR_PWM3, angle)
-            current_angle = angle
-
-        time.sleep(0.005) 
-
+# Function to display the ROI Blocks 
 def display_roi(img, ROIs, color):
     for ROI in ROIs:
         img = cv2.line(img, (ROI[0], ROI[1]), (ROI[2], ROI[1]), color, 4)
@@ -229,6 +206,7 @@ def display_roi(img, ROIs, color):
 
     return img 
 
+# Function to extract a list of contours present within the ROI 
 def get_contours(ROI, hsv, ranges): 
 
     segmented_area = hsv[ROI[1]: ROI[3], ROI[0]:ROI[2]]
@@ -245,6 +223,7 @@ def get_contours(ROI, hsv, ranges):
 
     return list_contour
 
+# Return the Max area of contours within the ROI detected contour block
 def detect_contour(contour, ROI, frame):
 
     maxArea = 0
@@ -266,32 +245,33 @@ def detect_contour(contour, ROI, frame):
 
     return maxArea  
 
+# Main function to run the script
 def run():
+	
+    print("RUN")
+
+
     # VARIABLES 
-    MID_SERVO = 0 # default angle of car and center 
+    MID_SERVO = 0 #
     TURN_DEGREE = 15 # default turning angle
-    MAX_DEGREE = 25 # Max turning angle
+    TURN_DEGREE_LEFT = 17 
+    MAX_DEGREE = 25 # Max turning angle -- ignored
 
     # Angle 
     angle = MID_SERVO
     prevAngle = angle 
-    # Motor
-    DC_SPEED = 1
 
-    # PD STEERING - subject to change via height
-    kp = 0.005
-    kd = 0.0004
+
+    # PD STEERING
+    kp = 0.003
+    kd = 0.002
     
-    kp_left = 0.0002
+    kp_left = 0.002
     kd_left = 0.005
 
     # areas to find proportional and derivative 
     areaDiff = 0
     prevAreaDiff = 0 
-
-    # Max amount we can turn either direction -> Center is 0 - Left is -90  - Right is +90
-    furthestLeft = MID_SERVO - MAX_DEGREE
-    furthestRight = MID_SERVO + MAX_DEGREE
 
     #Turning Logic Variables
     threshold_to_start_turn = 400 # how much the adjacent wall dissapears so that the car knows to turn in that direction
@@ -307,34 +287,31 @@ def run():
     counter =  0 
 
     # ROIs 
-    ROI1 = [0, 230, 150, 320] 
-    ROI2 = [490, 230, 640, 320] 
+    ROI1 = [0, 250, 100, 400] 
+    ROI2 = [530, 250, 630, 400] 
     ROI3 = [200, 300, 440, 350] 
 
     # FPS calculation setup
     prev_time = time.time()
 
-    # IDK YET
-    start = False 
-    turnDir = "none"
     
     # Color Masks range defined for black contour (walls) and line
     rBlack = [np.array([0,0,0]), np.array([180, 255, 75])]
     rBlue = [np.array([100, 30, 30]), np.array([140, 255, 255])]
     rOrange = [np.array([10, 100, 100]), np.array([25,255,255])]
 
-    turn_cooldown = 3.0  # seconds
-    last_turn_end_time = 0
-    line_released = True
-    turn_just_ended = False
-    waiting_for_release = False
+
+    line_released = True # Variable that waits until a new turn is acceptable
+    turn_just_ended = False # Variable that becomes true when turn is completed, yet waits to update line_released until both lines are out of sight
+
     
     motor_command_queue.put("drive")  # roll out
-    servo_angle_queue.put(0)
-    # Capture a frame
+    servo_angle_queue.put(angle)
+    
     try:
         while True:
-        
+            
+            # Capture frame - HSV conversion
             frame = picam2.capture_array()
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
 
@@ -347,76 +324,107 @@ def run():
             cListLine0 = get_contours(ROI3, hsv, rOrange)
             cListLine1 = get_contours(ROI3, hsv, rBlue )
 
-            # Find Area of Left Contours --> Make this into a function
+            # Find Area of Left Contours
             areaLeft = detect_contour(cListLeft, ROI1, frame)
             areaRight = detect_contour(cListRight, ROI2, frame)
             
-            # Line
+            # Line Area
             areaLineOrange = detect_contour(cListLine0, ROI3, frame)
             areaLineBlue = detect_contour(cListLine1, ROI3, frame)
              
-            if line_released and not waiting_for_release and not left_turn and not right_turn:
-                if areaLineBlue > line_threshold:
-                    left_turn = True
-                    line_released = False
-                    print("LEFT TURN STARTED")
 
-                elif areaLineOrange > line_threshold:
-                    right_turn = True
-                    line_released = False
-                    print("RIGHT TURN STARTED")
-                    
-            # find the area difference (Cross track error)
-            areaDiff = areaLeft - areaRight
+
+            # ===== TURN DETECTION PHASE =====
+            
+            if line_released:
+                # Check for a new turn if we are not already in a turn
+                if not (left_turn or right_turn):
+                    if areaLineBlue > line_threshold:
+                        left_turn = True
+                        line_released = False
+                        print("LEFT TURN HAS STARTED")
+                    if areaLineOrange > line_threshold:
+                        right_turn = True 
+                        line_released = False 
+                        print("RIGHT TURN HAS STARTED")
+            
+
+            # ===== CALCULATE VALUES FOR STEERING =====
+
+            areaDiff = areaLeft - areaRight # Cross track error 
             derivative_term = areaDiff - prevAreaDiff # Cross track error rate (to control)
             
-            angle = int(MID_SERVO + (kp * areaDiff) + (kd * derivative_term))
+
+
+            # ===== FIND STEERING ANGLE =====
+
+            if left_turn:
+                # Use left-specific PD vals
+                angle = int(MID_SERVO + (kp_left * areaDiff) + (kd_left * derivative_term))
+                angle = min(TURN_DEGREE_LEFT, max(angle, -TURN_DEGREE_LEFT))
+                #print("LEFT ANGLE", angle)
+                    
+            elif right_turn:
+                # standard right procedure
+                angle = int(MID_SERVO + (kp * areaDiff) + (kd * derivative_term))
+                angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
+                #print("RIGHT TURN ANGLE: ", angle)
+
+            else:
+                # Wall following mode + offset for left
+                angle = int(MID_SERVO + (kp * areaDiff) + (kd * derivative_term))
+                angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
+                if angle < 0:
+                    angle -= 2 
+                #print("ANGLE", angle)
+
+
+            
+            # ===== TURN COMPLETED CHECK =====
+
+            if left_turn or right_turn:
+                turn_should_end = False
+                # Conditions to exit a turn: respective wall reappears and subsequent line is spotted
+                if left_turn and areaLeft > threshold_to_end_turn and areaLineOrange > line_threshold:
+                    turn_should_end = True
+                elif right_turn and areaRight > threshold_to_end_turn and areaLineBlue > line_threshold:
+                    turn_should_end = True
+                
+                if turn_should_end:
+                    # Complete the turn
+                    left_turn = False
+                    right_turn = False 
+                    turn_just_ended = True
+                    prevDiff = 0
+                    counter += 1
+                    print("TURN COMPLETED - COUNTER: ", counter)
+            
+
+            # ===== SERVO COMMANDS =====
 
             if angle != prevAngle:
-                
-                if left_turn or right_turn:
-                    if ((areaRight > threshold_to_end_turn and right_turn) and areaLineBlue > line_threshold) or (areaLeft > threshold_to_end_turn and left_turn and areaLineOrange > line_threshold):
-                      #set turn variables to false as turn is over
-                        left_turn = False 
-                        right_turn = False
-                        turnDir = "none"
-                        turn_just_ended = True
-                        #reset prevDiff
-                        prevDiff = 0  
-                        counter += 1 
-                        print("COUNTER: ", counter)
-
-                    elif left_turn: 
-                        angle = int(MID_SERVO + (kp_left * areaDiff) + (kd_left * derivative_term))
-                        angle = min(17, max(angle, -17))
-                        print("LEFT ANGLE", angle)
-                        
-                    elif right_turn:
-                        angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
-
-                    servo_angle_queue.put(angle)
-                    
-                else:
-                    angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
-                    if angle < 0:
-                        angle -= 2
-                    print("ANGLE: ", angle)
-                    servo_angle_queue.put(angle)
+                servo_angle_queue.put(angle)
+                prevAngle = angle 
             
+
+            # ===== LINE CLEARED? =====
             if turn_just_ended:
+                # Wait until both lines are out of frame to prevent another turn on the same line
                 if areaLineBlue < line_threshold and areaLineOrange < line_threshold:
-                    line_released = True       # <--- allow new turn
-                    turn_just_ended = False    # reset
-                    print("LINE CLEARED, READY FOR NEXT TURN")
+                    line_released = True
+                    turn_just_ended = False 
+                    print("LINE CLEARED!! ")
 
-            prevAngle = angle
-            prevDiff = areaDiff
+            
+            # Update Values 
+            prevAreaDiff = areaDiff
 
-            # Stop Car Logic 
-            if counter == 12 and (abs(angle) - MID_SERVO) <= 3:
-                # STOP CAR
-                sleep(2) 
+
+            # ===== STOP CONDIITON CHECK =====
+            if counter == 12 and abs(angle) <= 3:
+                sleep(1)
                 motor_command_queue.put("stop")
+                servo_angle_queue.put(MID_SERVO)
             
             # Calculate FPS
             current_time = time.time()
@@ -430,8 +438,10 @@ def run():
             cv2.imshow('USB Camera Feed', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 motor_command_queue.put("stop")
+                servo_angle_queue.put(MID_SERVO)
                 picam2.stop()
                 cv2.destroyAllWindows()
+                pwm.DisableServo(SERVO_MOTOR_PWM3)
 
     finally:
         motor_command_queue.put("stop")
@@ -439,69 +449,23 @@ def run():
         cv2.destroyAllWindows()
         pwm.DisableServo(SERVO_MOTOR_PWM3)
 
+# Function to incorporate threaded functions
 def main():
-	t1 = threading.Thread(target=motor_drive, name='t1')
-	t2 = threading.Thread(target=servo_move, name='t2')
-	t1.start()
-	t2.start()
+
+    DC_SPEED = 1.0
+    t1 = threading.Thread(target=motor_drive, args=(DC_SPEED,), name='t1')
+    t2 = threading.Thread(target=servo_move, name='t2')
+    t1.start()
+    t2.start()
 	
-	run()
-	
-	motor_command_queue.put("stop")
+    run()
     
+    t1.join()
+    t2.join()
 	
-	t1.join()
-	t2.join()
-	
 
-if __name__ == '__main__':
-	
-	main()
+# RUN THE SCRIPT
+while True:
+	if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+		main()
     
-self.setPWM(SERVO_MOTOR_PWM3, 0, 0)
-
-
-
-
-
-
-"""
-Code Block Logic: 
-
-1. Display the 3 ROI boxes on video to capture the contour of the left and right wall alongside the floor for direction. (past comp)
-    a. make boxes by drawing a line to shape a box for the (x1,y1) -> top left & (x2,y2) -> bottom right
-
-2. Perform the Threshold and color detection exclusively for those boxes
-
-3. Perform necessary morphological transformations - performed on binary images (thresholded masked v)
-
-    
-        Logic: If the adjacent wall is less than start_turn_threshold, enter a turn (make the boolean True)
-        
-        If the angle value is changing: and we're in a turn 
-            And -> Where coming to an end of a turn, change the booeleans, reset the prev Diff for PD, and if line detected increment by one
-            Or -> we need to turn more (exit_threshold has not arrived yet), find the new angle to append **
-        
-        If the angle is changing: and we're not in a turn 
-            steer to the same angle, unless its greater to the sharp left or right, than clamp it to those values instead
-        
-        Update area diff (for the derivative term) and prev Angle (for the loop conditional -> Loop is working on the condition that the car is not driving straight)
-
-        ...
-
-        If its been 12 rounds and the car is basically straight stop the car
-
-         (cross track error) Ep : how far we are from the center (or middle)
-     is multiplied with Proportional Gain (usually a high gain means faster proportion to center)
-
-     Proportional Control is better than Bang-Bang control (when there is a fixed angle you turn toward to meet the cenetr)
-    # However, there is a chance that the car may meet the center line diagonally and overshoot consistently 
-
-    We can improve it by adding a derivative term (how much we move perpindicularly to the desired direction)
-        if we are pefectly follow the center the Cross track error rate ()
-        This is also multiplied to a pD gain to create the best steering angle along with Proportion 
-
-    
-
-
-"""
