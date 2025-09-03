@@ -2,7 +2,7 @@
 
 ### Team Members 
 
-<image src="https://drive.google.com/file/d/1sF6FegXFqu0r4o7zIjrYDKxvXBhM19wE/preview" width="640" height="480" allow="autoplay"></image>
+<iframe src="https://drive.google.com/file/d/1sF6FegXFqu0r4o7zIjrYDKxvXBhM19wE/preview" width="640" height="480" allow="autoplay"></iframe>
 
 > Team Members
 - Abdul Farooqi, 17, abdulfarooqi@gmail.com
