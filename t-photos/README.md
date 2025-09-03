@@ -1,1 +1,1 @@
-This are our team photos
+These are our team photos
