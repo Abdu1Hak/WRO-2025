@@ -456,11 +456,11 @@ if track_Dir is None and line_released and not waiting_for_release:
 ```
 
 
-```python track_Dir``` keeps track of the current turn direction.
+``` track_Dir``` keeps track of the current turn direction.
 
 If the robot detects an area of the blue line larger than our line threshold, or minimum area to protect against accidental detection, (areaLineBlue > line_threshold), it sets the turn direction to left and vice versa for the orange line (areaLineOrange > line_threshold).
 
-```python line_released``` ensures that the robot does not accidentally trigger multiple turns from the same line.
+``` line_released``` ensures that the robot does not accidentally trigger multiple turns from the same line.
 
 Essentially, this section of code is comparable to a decision gate, asking the question?: “Do I start a left turn, right turn, or keep going straight?”
 
@@ -491,7 +491,7 @@ if track_Dir == "right" and areaLineOrange > line_threshold:
         turn_just_ended = True
 ```
 
-While turning right, the robot adjusts its steering angle (```python angle```) based on:
+While turning right, the robot adjusts its steering angle (``` angle```) based on:
 
   If blue line is not detected as well as a green pillar, it turns slightly more than normal (turn_Deg + 8).
 
@@ -534,11 +534,11 @@ This occurs when the opposing line comes back into view (e.g., for a right turn,
 
 At that point:
 
-  The robot resets ```python track_Dir = None``` so robot ready to detect the next turn.
+  The robot resets ``` track_Dir = None``` so robot ready to detect the next turn.
 
-  ```python turn_counter``` is incremented to keep track of how many turns have been made and to mark when to run the parallel parking code.
+  ``` turn_counter``` is incremented to keep track of how many turns have been made and to mark when to run the parallel parking code.
 
-  ```python turn_just_ended``` is set to prevent double-counting.
+  ``` turn_just_ended``` is set to prevent double-counting.
 
 Summary in plain words
 
