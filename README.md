@@ -1,4 +1,4 @@
-# WRO-2025 - Engineering Documentation ⚙️⚙️
+# WRO-2025 - Engineering Documentation ⚙️⚙️⚙️
 
 ### Team Members 
 
