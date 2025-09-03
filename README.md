@@ -551,16 +551,18 @@ Summary in plain words
   This ensures the robot can reliably follow a path with alternating left/right turns while adapting to obstacles (pillars).
 
 
-### Parking
-How do we leave the parking, and how do we understand direction?
+#### Parking
+##### Exiting Parking Spot
+
+
 How do we enter the parking spot after 3 rounds?
 How do we manage color detection between red pillars and magenta parking lot walls?
 
-### Flow Diagram - Obstacle Challenge
+#### Flow Diagram - Obstacle Challenge
 
 <img width="791" height="652" alt="image" src="https://github.com/user-attachments/assets/2f230ded-b8f1-44ba-b78e-60dafe4bf03d" />
 
 
-## 7. Assembly 
-## 8. Improvements
+#### 7. Assembly 
+#### 8. Improvements
    
