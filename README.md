@@ -602,6 +602,51 @@ How do we manage color detection between red pillars and magenta parking lot wal
 <img width="791" height="652" alt="image" src="https://github.com/user-attachments/assets/2f230ded-b8f1-44ba-b78e-60dafe4bf03d" />
 
 
-#### 6. Assembly 
+## 6. Complete Assembly Instructions
+
+#### 1. Print all the Necessary 3D printed parts
+* The Base of the robot, along with the battery holder, the servo holder, and the back robot wall pieces for the vertical motor mount and the axles to travel through, is all one printed component.
+* The wheel holder, the servo cap, and the front steering base are the rest of the components
+
+#### 2. Install the parts (first storey)
+* Components such as the **servo** and the **motor** must be mounted and screwed into their places before all the screws can be placed
+
+#### 3. Screwing
+* We used 8 Vex screws, 21 m2 nuts and screws.
+* We begin by screwing the steering frame and attaching the wheels to its arms.
+* This new component is later screwed down at the top of the base of the robot frame with the screws entering from the bottom. This ensures the nuts can easily be tightened without the need to tilt the robot over.
+* We screw the servo to its cap with the M2 screws entering through the cap and the servo arms. The other end of the servo arms is attached to the narrowing end of the wheel arms
+
+#### 4. Back of the Robot
+* The motor is mounted vertically with its head facing down against a gearbox. There are two gears in this box: the top turning the side gear, which is connected to the differential and the axle.
+* When the axle meets the access points that are mounted to the base of the chassis with Vex screw pouring in from the bottom up and supported by the m2 nuts.
+* Finally, there are LEGO spacers in between the wheels and 3d printed access points
+
+#### 5. Second Storey.
+* The front of the robot features 4 standoffs that give rise to the 3d printed case of the Pi, which also includes a standing mount for the camera.
+* The Rotatable mount has the freedom to move up and down to give us the perfect sweat spot for the mount.
+* Screws are poured in from the floor of the case into the standoff. The Case will feature the Raspberry Pi 4, which is taped down.
+* The hat sits on top of the GPIO pins of the Pi
+
+#### 6. Installing all components. 
+* The wheels in the back can be attached to the axle.
+* The battery can be inserted directly into the holder.
+* The Camera is taped to the mount with its wire inserted into the RPi 15-pin camera port.
+
+#### 7. Wiring
+* Two wires from the battery are soldered to the GND and VIN on the hat: (Green --> GND - Grey --> VIN)
+* Two wires to MA2 and MA1, the white goes to MA1, the black goes to MA2.
+* The Push button is mounted to the PO7 and GND (orientation doesn't matter)
+* The servo is mounted to the servo pin headers on the Hat (Brown --> GND, Red --> VCC, yellow --> PWM)
+
+#### 8. Run the Robot
+* Turn the switch on the battery
+* Turn the switch on the Hat
+* Wait 30-45 seconds for the Pi to Boot its interface
+* Press the Button on the Pi, and the code will run!
+  * Ensure the Pi receives which code file to run
+
+
+
 
    
