@@ -31,8 +31,8 @@ File Name | Description
 - [Game Objective](#1-objective-of-the-game)
 - [Game Strategy](#2-our-strategy)
 - [Mobility Management](#3-mobility-management)
-- [Power and Sense Management](#5-power-and-sense-management)
-- [Software](#6-software---open-challenge---obstacle-challenge---parking)
+- [Power and Sense Management](#4-power-and-sense-management)
+- [Software](#5-software---open-challenge---obstacle-challenge---parking)
   - [Setup and Initialization](#using-vnc---connecting-to-the-pi)
   - [Begin Open Challenge](#open-challenge)
     - [Wall Detection](#wall-detection)
@@ -45,8 +45,7 @@ File Name | Description
     - [Turning (Obstacle)](#turning-with-obstacles-in-the-way---wait)
   - [Parking](#parking)
  - [Flow Diagram Logic](#flow-diagram---obstacle-challenge)
-- [Assembly](#7-assembly)
-- [Improvements](#8-improvements)
+- [Assembly](#6-assembly)
 
 
 
@@ -101,7 +100,7 @@ This documentation serves as a consolidated record of our engineering process, h
 
 PLEASE DO THIS ----------------------------------------------
 
-## 5. Power and Sense Management
+## 4. Power and Sense Management
 
 The Robot is composed of a minimal amount of sensors, motors, and a main processing unit, the Raspberry Pi 4 Model B. 
 
@@ -134,26 +133,24 @@ The Robot is composed of a minimal amount of sensors, motors, and a main process
 More information on the Hardware Components can be found in [Build](https://github.com/Abdu1Hak/WRO-2025/tree/cc1186081c65a94e3f9d5a899eeedb2a14111d81/Build) 
 
 
-### Managment
+### Management
 
-Our vehicle is powered by a 12V lithium-ion power bank (TalentCell YB1203000-USB), chosen for its fair weight ```190 grams```, current output of up to ```3A``` and operating temperature range (-20C to 60C). This battery was ideal because it delivered adequate current to run the Pi, motor, servo, and others without overheating. The 12V rail is sent to the motor driver (TB6612FNG), which directly controls the brushed DC gearmotors, and also to the servo controller board (PCA9685) which features its own onboard 5V regular - both these items are built into the HAT. This dual-stage regulaton allows our system to consolidate power delivery to all moving parts while reducing wire complexity. One battery saves weight and improves reliability in extended runs. 
+Our vehicle is powered by a 12V lithium-ion power bank (TalentCell YB1203000-USB), chosen for its fair weight ```190 grams```, current output of up to ```3A``` and operating temperature range (-20C to 60C). This battery was ideal because it delivered adequate current to run the Pi, motor, servo, and others without overheating. The 12V rail is sent to the motor driver (TB6612FNG), which directly controls the brushed DC gearmotors, and also to the servo controller board (PCA9685), which features its own onboard 5V regulator - both these items are built into the HAT. This dual-stage regulation allows our system to consolidate power delivery to all moving parts while reducing wire complexity. One battery saves weight and improves reliability in extended runs. 
 
-The RPi camera is our primary vision sensor, drawing approximately 200mA at 5V. It connects via MIPI CSI, ensuring low latency and reduced CPU overhead compared to a USB camera. Initially, we invested a lot of time and tools into testing out USB camera, such as this [module](https://www.amazon.ca/OV2643-Camera-Module-Autofocus-Board/dp/B07QGZCF8N/ref=sr_1_5?sr=8-5) and this other [module](https://www.amazon.ca/Kano-Headphones-Bluetooth-Buildable-Booming/dp/B08KSBSZTG/ref=pd_ci_mcx_di_int_sccai_cn_d_sccl_2_3/145-3181089-8444629?psc=1). However, a comparative analysis should that using non-usb camera would significantly reduce the CPU usage. While streaming a live feed on the USB cameras, we noticed perpetual falls and freezes in fps and it was becoming difficult to update data variables at the speed we had intended for. We opted for this camera over alternatives such as the LIDAR or ultrasonic sensors because it provides more context with less power than many discrete sensors. Through LAB color-space processing, the camera would identify walls, lanes, and pillars based on color and shape.
+The RPi camera is our primary vision sensor, drawing approximately 200mA at 5V. It connects via MIPI CSI, ensuring low latency and reduced CPU overhead compared to a USB camera. Initially, we invested a lot of time and tools into testing out USB cameras, such as this [module](https://www.amazon.ca/OV2643-Camera-Module-Autofocus-Board/dp/B07QGZCF8N/ref=sr_1_5?sr=8-5) and this other [module](https://www.amazon.ca/Kano-Headphones-Bluetooth-Buildable-Booming/dp/B08KSBSZTG/ref=pd_ci_mcx_di_int_sccai_cn_d_sccl_2_3/145-3181089-8444629?psc=1). However, a comparative analysis showed that using non-usb camera would significantly reduce the CPU usage. While streaming a live feed on the USB cameras, we noticed perpetual falls and freezes in fps and it was becoming difficult to update data variables at the speed we had intended for. We opted for this camera over alternatives such as the LIDAR or ultrasonic sensors because it provides more context with less power than many discrete sensors. Through LAB color-space processing, the camera would identify walls, lanes, and pillars based on color and shape.
+
+For manual input, we used a pull-button start mechanism on GPIO 17 configured with an internal pull-up resistor. 
 
 ### Camera Mount with a rotatable surface
-<img width="826" height="406" alt="image" src="https://github.com/user-attachments/assets/7ea2144a-3e43-4e14-89fe-05befa14b130" /><img width="363" height="260" alt="image" src="https://github.com/user-attachments/assets/d47d7aab-bf35-47d0-a5a6-14ca4e4bee32" />
+<img width="526" height="406" alt="image" src="https://github.com/user-attachments/assets/7ea2144a-3e43-4e14-89fe-05befa14b130" /><img width="363" height="260" alt="image" src="https://github.com/user-attachments/assets/d47d7aab-bf35-47d0-a5a6-14ca4e4bee32" />
+
+### Improvements
+
+Firstly, the start button could benefit from a more rigid base, as the current design allows unintended flexing. Secondly, incorporating an additional sensor alongside the camera during parallel parking could have improved overall accuracy and provided more robust positional feedback. Finally, due to network transmission and the high computational load imposed by real-time camera processing, the streamed video feed was not consistently smooth. Occasional frame freezes could pose a significant challenge, as the robot relies on continuously updated visual data to accurately determine its position and orientation.
 
 
 
-Power and Sense management discussion should cover the power source for
-the vehicle as well as the sensors required to provide the vehicle with
-information to negotiate the different challenges. The discussion can include
-the reasons for selecting various sensors and how they are being used on the
-vehicle together with power consumption. The discussion could include a wiring
-diagram with BOM for the vehicle that includes all aspects of professional
-wiring diagrams. Be as detailed as possible - provide improvements. 
-
-## 6. Software - Open Challenge - Obstacle Challenge - Parking
+## 5. Software - Open Challenge - Obstacle Challenge - Parking
 
 ### Using VNC - Connecting to the PI
 
@@ -600,6 +597,6 @@ How do we manage color detection between red pillars and magenta parking lot wal
 <img width="791" height="652" alt="image" src="https://github.com/user-attachments/assets/2f230ded-b8f1-44ba-b78e-60dafe4bf03d" />
 
 
-#### 7. Assembly 
-#### 8. Improvements
+#### 6. Assembly 
+
    
