@@ -1,4 +1,4 @@
-# WRO-2025 - Engineering Documentation ⚙️⚙️⚙️
+# The Robertos Engineering Documentation | WRO-2025 ⚙️⚙️⚙️
 
 ### Team Members 
 
@@ -109,10 +109,10 @@ PLEASE DO THIS ----------------------------------------------
 The Robot is composed of a minimal amount of sensors, motors, and a main processing unit, the Raspberry Pi 4 Model B. 
 
 ### Pinout of the HAT
-<img width="973" height="618" alt="image" src="https://github.com/user-attachments/assets/1ba73d24-60bf-4041-91fa-448d421dbbee" />
+<img width="973" height="618" alt="image" src="https://github.com/user-attachments/assets/06a47797-d415-4c23-8a8a-20a52f8471c1" />
 
 ### Custom-Made Circuit Scheme of the Robot
-<img width="1060" height="480" alt="image" src="https://github.com/user-attachments/assets/865e0d0e-f861-4994-a4d1-5dc5745edfb6" />
+<img width="1060" height="480" alt="image" src="https://github.com/user-attachments/assets/83bf0e6d-9c75-4fbf-ac40-7133e3e23360" />
 
 ### Power Heirarchy
 
