@@ -53,8 +53,6 @@ File Name | Description
 
 
 
-3. Video of Open Challenge - Annotated
-   
 9. Finish Mobility Management - includes pictures, chassis design, motors, servo, improvements, final product -- AARAV
 10. More pictures in software documentation
 11. Fix Obstacle Challenge Code - Organize it
