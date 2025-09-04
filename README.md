@@ -4,6 +4,7 @@
 
 <img width="713" height="671" alt="image" src="https://github.com/user-attachments/assets/b72c08db-f416-4baa-a63d-0307d5091035" />
 
+
 > Team Members
 - Abdul Farooqi, 17, abdulfarooqi@gmail.com
 - Aarav Daudia, 16, f18astro@gmail.com
@@ -28,8 +29,8 @@ File Name | Description
 ### README Contents
 
 - [Game Objective](#1-objective-of-the-game)
-- [Game Strategy](#3-what-is-our-goal)
-- [Mobility Management](#4-mobility-management)
+- [Game Strategy](#2-our-strategy)
+- [Mobility Management](#3-mobility-management)
 - [Power and Sense Management](#5-power-and-sense-management)
 - [Software](#6-software---open-challenge---obstacle-challenge---parking)
   - [Setup and Initialization](#using-vnc---connecting-to-the-pi)
@@ -49,11 +50,7 @@ File Name | Description
 
 
 
-Things to do:
-
-2. Add Vehicle Pictures and Team pictures
 3. Video of Open Challenge - Annotated
-5. Add Team pics to Read Me
    
 9. Finish Mobility Management - includes pictures, chassis design, motors, servo, improvements, final product -- AARAV
 10. Power and Sense Management - ElectroMechanical Diagram - Power and wiring, sensors, hat, expansion board, etc.
@@ -87,26 +84,66 @@ Goal: Design and program a self-driving car that completes both the Open Challen
 - After 3 laps are completed, the car must parallel park into the parking zone
 
 
-## 3. What is our goal
+## 2. Our Strategy
 
-Considering our skill set - what areas did we prioritize, beginning challenges, and our goal to work towards
+Throughout the development of our robot, we identified specific areas to prioritize based on our team’s skills and the requirements of the challenge. Our team consisted of two members: Aarav, who specialized in CAD design, mechanical iteration, and chassis optimization, and Abdul, who focused on game logic, coding, and system integration. Together, this allowed us to balance robust mechanical design with awesome software implementation.
 
-## 4. Mobility Management
+For the software framework, we selected Python due to its accessibility, extensive library support, and compatibility with computer vision tools. Our design philosophy was simplicity and effectiveness: how could we best utilize a peripheral to interpret the playing field and execute tasks autonomously? While the drivetrain relied on a DC motor for propulsion and a servo for steering, the central sensing device we used was the camera. Unlike single-purpose sensors, the camera offered environmental data, allowing for object detection, color recognition, and spatial awareness. We intentionally prioritized vision-based sensing over other alternatives, confident that it would provide the most direct path to consistent performance.
 
-Mobility management discussion should cover how the vehicle movements are
-managed. What motors are selected, how they are selected and implemented.
-A brief discussion regarding the vehicle chassis design /selection can be
-provided as well as the mounting of all components to the vehicle
-chassis/structure. The discussion may include engineering principles such as
-speed, torque, power etc. usage. Building or assembly instructions can be
-provided together with 3D CAD files to 3D print parts. Be as detailed as possible.
-Information on improvements is also provided.
+The computational platform was the Raspberry Pi, chosen over microcontrollers such as Arduino or ESP boards. This decision was driven by the Pi’s higher processing capabilities, making it better suited for handling the intensive operations required by real-time image processing. Since our system heavily depended on computer vision, the Pi provided the necessary balance of performance and scalability.
+
+To structure development, we adopted a staged approach: **research** → **test** → **refine** → **iterate**. Numerous design ideas were discussed, but we initially focused on building a minimal, working prototype before exploring optimizations. The combination of the Raspberry Pi and OpenCV meant rapid prototyping, allowing us to quickly get set up with color detection, contour tracking, and geometric calculations for navigation. This iterative process created opportunities for improvements and informed our overall strategy.
+
+This documentation serves as a consolidated record of our engineering process, highlighting technical decisions, challenges encountered, and opportunities for improvement.
+
+
+## 3. Mobility Management
+
+PLEASE DO THIS ----------------------------------------------
 
 ## 5. Power and Sense Management
 
-### Hardware Setup Guide
-
 The Robot is composed of a minimal amount of sensors, motors, and a main processing unit, the Raspberry Pi 4 Model B. 
+
+### Pinout of the HAT
+<img width="973" height="618" alt="image" src="https://github.com/user-attachments/assets/1ba73d24-60bf-4041-91fa-448d421dbbee" />
+
+### Custom-Made Circuit Scheme of the Robot
+<img width="1060" height="480" alt="image" src="https://github.com/user-attachments/assets/865e0d0e-f861-4994-a4d1-5dc5745edfb6" />
+
+### Power Heirarchy
+
+* Battery ```12V - 3000mA```
+  * Pi HAT Regulator
+    * Raspberry Pi 4 Model B ```6V 3000mA```
+      * RPi Camera ```5V 200mA```
+    * Motor ```6-12V - 650-2200mA```
+    * Servo ```6V - 1000mA```
+    * Button ```negligable```
+
+### Connections
+* Laptop
+  * ```VNC``` using RealVNC into Pi
+    * Raspberry Pi
+      * HAT
+      * Motor
+      * Servo
+      * Camera
+      * Button
+
+More information on the Hardware Components can be found in [Build](https://github.com/Abdu1Hak/WRO-2025/tree/cc1186081c65a94e3f9d5a899eeedb2a14111d81/Build) 
+
+
+### Managment
+
+Our vehicle is powered by a 12V lithium-ion power bank (TalentCell YB1203000-USB), chosen for its fair weight ```190 grams```, current output of up to ```3A``` and operating temperature range (-20C to 60C). This battery was ideal because it delivered adequate current to run the Pi, motor, servo, and others without overheating. The 12V rail is sent to the motor driver (TB6612FNG), which directly controls the brushed DC gearmotors, and also to the servo controller board (PCA9685) which features its own onboard 5V regular - both these items are built into the HAT. This dual-stage regulaton allows our system to consolidate power delivery to all moving parts while reducing wire complexity. One battery saves weight and improves reliability in extended runs. 
+
+The RPi camera is our primary vision sensor, drawing approximately 200mA at 5V. It connects via MIPI CSI, ensuring low latency and reduced CPU overhead compared to a USB camera. Initially, we invested a lot of time and tools into testing out USB camera, such as this [module](https://www.amazon.ca/OV2643-Camera-Module-Autofocus-Board/dp/B07QGZCF8N/ref=sr_1_5?sr=8-5) and this other [module](https://www.amazon.ca/Kano-Headphones-Bluetooth-Buildable-Booming/dp/B08KSBSZTG/ref=pd_ci_mcx_di_int_sccai_cn_d_sccl_2_3/145-3181089-8444629?psc=1). However, a comparative analysis should that using non-usb camera would significantly reduce the CPU usage. While streaming a live feed on the USB cameras, we noticed perpetual falls and freezes in fps and it was becoming difficult to update data variables at the speed we had intended for. We opted for this camera over alternatives such as the LIDAR or ultrasonic sensors because it provides more context with less power than many discrete sensors. Through LAB color-space processing, the camera would identify walls, lanes, and pillars based on color and shape.
+
+### Camera Mount with a rotatable surface
+<img width="826" height="406" alt="image" src="https://github.com/user-attachments/assets/7ea2144a-3e43-4e14-89fe-05befa14b130" /><img width="363" height="260" alt="image" src="https://github.com/user-attachments/assets/d47d7aab-bf35-47d0-a5a6-14ca4e4bee32" />
+
+
 
 Power and Sense management discussion should cover the power source for
 the vehicle as well as the sensors required to provide the vehicle with
