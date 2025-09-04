@@ -12,6 +12,10 @@
 > Coach
 - Vikramjeet Singh, singhvikramjeet557@gmail.com
 
+
+Five Items left in documentation - two pics, parking, assembly, and obstacle challenge video - and hardware compoenents detailed
+
+
 ### Repository Contents
 
 File Name | Description
@@ -156,7 +160,7 @@ Firstly, the start button could benefit from a more rigid base, as the current d
 
    Our primary method of interfacing with the Raspberry Pi to monitor the camera feed was through RealVNC, establishing a wireless connection between the Pi and our system on the same network. By accessing the Pi’s IP address, we were able to mirror its desktop environment directly on our screen. While this approach initially introduced little overhead, performance bottlenecks quickly emerged, primarily in the form of latency and memory limitations.
 
-   When running our open challenge code, we observed frame rates dropping to between 0 and 5 FPS. The root cause was the Pi’s limited 2 GB of RAM, which could not simultaneously handle intensive video processing and real-time motor control. To resolve this, we restructured execution by assigning tasks to separate CPU cores using threading: one core dedicated to motor commands, another to servo operations, and a third to managing the camera feed. This distribution of workload significantly reduced contention and stabilized performance, resulting in a consistent throughput of approximately 30 FPS. 
+   When running our open challenge code, we observed frame rates dropping to between 0 and 5 FPS. The root cause was the Pi’s limited 2 GB of RAM, which could not simultaneously handle intensive video processing and real-time motor control. To resolve this, we restructured execution by assigning tasks to separate CPU cores using threading: one core dedicated to motor commands, another to servo operations, and a third to managing the camera feed. This distribution of workload significantly reduced contention and stabilized performance, resulting in a consistent ```> 30 FPS```. We also switched over to an 8GB RAM Pi for its added benefits.
 
 ```python
 import threading
@@ -172,7 +176,7 @@ t2 = threading.Thread(target=servo_move, name='t2')
 ### Installing Libraries
 
 ``` sudo apt install smbus, board, busio, adafruit_vl53l0x```
-- Relevant Libraries to interact with the Hat (Expansion Board) and Motor
+- Relevant Libraries to interact with the Hat and Motor
 
 ``` sudo apt install python3-picamera2 ```
 - Library to open the camera
@@ -259,21 +263,23 @@ def Drive(self, channel, percent, wise, pwm):
 ## Open Challenge
 
 #### Wall Detection
-The car begins by initializing the PiCamera2, giving us a continuous video feed which will later be processed for color detection and contour tracking. Inside the main loop, we capture the frame and convert the RGB image to HSV (a color model that separates hue from brightness), which is required for accurate color masking. 
+The car begins by initializing the PiCamera2, giving us a continuous video feed which will later be processed for color detection and contour tracking. Inside the main loop, we capture the frame and convert the RGB image to Lab (a color space that was better at identifying objects than HSV), which is required for accurate color masking. 
 
 ```python
 frame = picam2.capture_array()
-hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
+lab = cv2.cvtColor(frame, cv2.COLOR_BGRLab) 
 ```
-Instead of processing the entire screen, we focus on processing specific areas of the frame that encapsulate the left wall, right wall, and the floor/line infront of the robot. These areas save computation and drastically improve detection speed. These boxes are visualized and returned using the function ```display_roi()``` on the video feed for live confirmation. Thereafter, we begin color masking using thresholds that are defined by a lower and upper HSV range:
+Instead of processing the entire screen, we focus on processing specific areas of the frame that encapsulate the left wall, right wall, and the floor/line infront of the robot. These areas save computation and drastically improve detection speed. These boxes are visualized and returned using the function ```display_roi()``` on the video feed for live confirmation. Thereafter, we begin color masking using thresholds that are defined by a lower and upper Lab range:
 
 ```python
-rBlack = [np.array([0,0,0]), np.array([180, 255, 75])] # for walls
-rBlue = [np.array([100, 30, 30]), np.array([140, 255, 255])] # for blue line
-rOrange = [np.array([10, 100, 100]), np.array([25,255,255])] # for orange line
+rBlack = [np.array([0,110,112]), np.array([60, 149, 154])] # for walls
+rBlue = [np.array([12, 119, 87]), np.array([117, 144, 117])] # for blue line
+rOrange = [np.array([0, 162, 176]), np.array([255,120, 170])] # for orange line
+
+# Note: These values are subject to change under different lighting conditions.
 ```
 
-If a pixel's HSV value falls within this range, it is part of the target object. Thereafter, we extract only the ROI area from the HSV frame, and use ``` cv2.inRange() ``` to generate a binary mask where pixels within the range have a value of 255 (white) and those out of range are set to 0 (black). This will isolate the color we want in that ROI. This operation can often be noisy with small, unwanted white pixels. To fix this, we performed further morphological operations that will erode (remove tiny unwanted pixels) and dilate (expand remaining white areas to restore the object size), helping us make contours smoother and more reliable. 
+If a pixel's Lab value falls within this range, it is part of the target object. Thereafter, we extract only the ROI area from the Lab frame, and use ``` cv2.inRange() ``` to generate a binary mask where pixels within the range have a value of 255 (white) and those out of range are set to 0 (black). This will isolate the color we want in that ROI. This operation can often be noisy with small, unwanted white pixels. To fix this, we performed further morphological operations that will erode (remove tiny unwanted pixels) and dilate (expand remaining white areas to restore the object size), helping us make contours smoother and more reliable. 
 
 ```python
 segmented_area = hsv[ROI[1]: ROI[3], ROI[0]:ROI[2]]
@@ -282,6 +288,8 @@ kernel = np.ones((5,5), np.uint8)
 erode = cv2.erode(mask, kernel, iterations=1)
 dilate = cv2.dilate(erode, kernel)
 ```
+
+# ------- INSERT IMAGE Of Dilated Picture
 
 Now that we can extract the available contours, we use ``` cv2.findContours() ``` to find continuous shapes in the mask, only considering the outermost contours and compressing unnecessary points to simplify contour shapes. The result is a list of all contours that represent detected objects in that ROI. To show this detection in real time, we create a rectangular box around the contour and take the largest contour area for steering calculations. The result of all these operations is that we can successfully detect the two parallel walls and the line infront, calculate how much of the contours are visible in that area, and eventually use these values to perform corrective steering.
 
@@ -298,9 +306,7 @@ def detect_contours(contour, ROI, frame)
 ```
 
 #### PD Steering
-   Our main strategy for autonomous travel was to use proportional derivative control with a wide-angle camera, a FOV of 170 degrees. In the open challenge, the only components visible to the camera were the two parallel inner and outer walls, as well as the colored lines indicating a turn. The code begins by measuring how many contours are present in the ROI (Region of Interest) for both walls, and by calculating the area of these contours, it becomes a means of determining how much of the walls are visible to the camera. By calculating the difference between the left and right walls based on the contours on either side, which is again based on the horizontal position of the car, we can determine how far we are from the desired trajectory. This area difference, also known as Cross Track Error (Ep), would be multiplied by a scaling factor called the proportional gain, which would result in a steering angle. Overall, the gain that would satisfy the requirements of our vehicle would be 0.005, and this value is subject to change. The main reason why our value is so small is that the servo's range of movement is between -25 degrees (far left) and 25 degrees (far right), and our car is relatively slow. 
-
-INSERT PICTURE HERE
+   Our main strategy for autonomous travel was to use proportional derivative control with a wide-angle camera, a FOV of 200 degrees. In the open challenge, the only components visible to the camera were the two parallel inner and outer walls, as well as the colored lines indicating a turn. The code begins by measuring how many contours are present in the ROI (Region of Interest) for both walls, and by calculating the area of these contours, it becomes a means of determining how much of the walls are visible to the camera. By calculating the difference between the left and right walls based on the contours on either side, which is again based on the horizontal position of the car, we can determine how far we are from the desired trajectory. This area difference, also known as Cross Track Error (Ep), would be multiplied by a scaling factor called the proportional gain, which would result in a steering angle. Overall, the gain that would satisfy the requirements of our vehicle would be 0.005, and this value is subject to change. The main reason why our value is so small is that the servo's range of movement is between -25 degrees (far left) and 25 degrees (far right), and our car is relatively slow. 
 
 ```python
 # Proportional and derivative gains
@@ -308,7 +314,7 @@ kp = 0.005
 kd = 0.0004
 ```
 
-   With proportional control, if the car only sees a single wall, it can enter the center line (center of both walls) crookedly. The result of this is that the controller will repeatedly overshoot the actual desired trajectory and not actually follow it. To correct this overshooting problem, we consider additional error measurements to update our steering command. The Derivative term  allows us to understand how fast we are moving in a perpendicular direction with respect to the desired trajectory. If the cross-track error is a low figure, or 0, it means we are perfectly following the desired trajectory. So by calculating the difference between our current area difference to the previous area difference, we get our derivative term, which likewise is subject to a derivative gain, allowing us to eventually close that overshooting gap in the instance that the car follows a zig-zag pattern. To prevent cases where our car would underdamp or overdamp, our team would continuously test different numerical figures and would eventually settle on 0.0004. This would allow our slow car to perfectly navigate the rounds smoothly without overshooting or underdamping because of this robust algorithm to determine the best angle
+   With proportional control, if the car only sees a single wall, it can enter the center line (center of both walls) crookedly. The result of this is that the controller will repeatedly overshoot the actual desired trajectory and not actually follow it. To correct this overshooting problem, we consider additional error measurements to update our steering command. The Derivative term allows us to understand how fast we are moving in a perpendicular direction with respect to the desired trajectory. If the cross-track error is a low figure, or 0, it means we are perfectly following the desired trajectory. So by calculating the difference between our current area difference to the previous area difference, we get our derivative term, which likewise is subject to a derivative gain, allowing us to eventually close that overshooting gap in the instance that the car follows a zig-zag pattern. To prevent cases where our car would underdamp or overdamp, our team would continuously test different numerical figures and would eventually settle on 0.0004. This would allow our slow car to perfectly navigate the rounds smoothly without overshooting or underdamping because of this robust algorithm to determine the best angle
 
 ```python
 # find the area difference (cross-track error) and cross-track error rate 
@@ -322,6 +328,9 @@ angle = int(MID_SERVO + (kp * areaDiff) + (kd * derivative_term))
 # Calculated angle is placed in the queue
 servo_angle_queue.put(angle)
 ```
+
+# ----- INSERT PICTURE HERE OF WALL DETECTION AND STEERING CALCULATION IN TERMINAL
+
 
 #### Turning
 Similarly to the walls, we also detect the number of contours present in the orange and blue lines ahead of us. When the number of contours in the line exceeds an arbitrary threshold value, it is a condition to enter its respective turn direction. Once in a turn, we constantly examine if the wall that we turn against is above a threshold value and if the subsequent line has been detected. If these two conditions are met, we exit the turn and append our counter. The counter is responsible for calculating the number of turns.
@@ -347,7 +356,7 @@ if left_turn or right_turn:
         print("TURN COMPLETED - COUNTER: ", counter) 
 ```
 
-In a right turn, we will continue using the angle value calculated based on the area difference. Ultimately, when a right turn appears, the amount of contour in the right wall will decrease until the value eventually reaches 0. This, in turn, generates an angle that resembles a sharp right turn. To prevent this angle from exceeding the steering range, we clamp the values to its turn degree. 
+In a right turn, we will continue use the angle value calculated based on the area difference. Ultimately, when a right turn appears, the amount of contour in the right wall will decrease until the value eventually reaches 0. This, in turn, generates an angle that resembles a sharp right turn. To prevent this angle from exceeding the steering range, we clamp the values to its turn degree and ensure our kp and kd are small to deliver a value of ideally ```18-20 degrees``` which is equivalent to a standard servo's ```60-70 degrees```. 
 
 
 ```python
@@ -368,7 +377,7 @@ if left_turn:
 ```
 If the car is not in a left or right turn, the angle values would still be clamped, and to combat our left steering weakness, the negative angles would be offset by a small amount of -2 to make the car even smoother.
 
-To prevent the same line from the subsequent line from being detected after a turn has been performed, we wait until both lines are out of sight and update a variable ``` line_released = True ```
+To prevent the same line from being detected after a turn has been performed, we wait until both lines are out of sight after detecting the second line and update a variable ``` line_released = True ```
 
 ```python
 if turn_just_ended:
@@ -384,7 +393,7 @@ Once the counter has reached 12 (3 Full rounds) and the angle value is near zero
 ```python
 # Stop Car Logic 
 if counter == 12 and abs(angle) <= 3:
-    sleep(1)
+    sleep(2)
     motor_command_queue.put("stop")
     servo_angle_queue.put(MID_SERVO)
 ```
@@ -393,13 +402,13 @@ if counter == 12 and abs(angle) <= 3:
 
 #### Pillar Detection and Maneuvering 
 
-When a frame is captured and converted to HSV, the first pillar-related step is to extract color-specific contours from the forward-looking ROI. 
+When a frame is captured and converted to Lab, the first pillar-related step is to extract color-specific contours from the forward-looking ROI. 
 ```python
 cListPillarGreen = get_contours(ROI_MAIN, hsv, rGreen)
 cListPillarRed, dilate = get_red_contours(ROI_MAIN, hsv, rRed, rRed2)
 ```
 
-These raw contours are filtered into potential candidates with the function ``` filter_pillars() ``` that enforces a minimum area and computes geometric values for each pillar: center x, top y, height, and distance. This distance prefers pillars that are lower in the image and near the camera center.  Then these pillars must pass short logical filters. We ignore pillars if it is not the closest pillar (to avoid multiple pillars being detected). A pillar is marked passed if it has moved past a horizontal target zone ```python if pillar["x"] < redTarget ``` or mark it 'too far' if the bottom ```python pillar["y"] + pillar["h"]``` is above a soft distance threshold (< 155) which indicates the pillar is still far vertically. Only when these conditions are met will the dictionary below be appended as the 'closest pillar'.
+These raw contours are filtered into potential candidates with the function ``` filter_pillars() ``` that enforces a minimum area and computes geometric values for each pillar: center x, top y, height, and distance. This distance prefers pillars that are lower in the image and near the camera center.  Then these pillars must pass short logical filters. We ignore pillars if it is not the closest pillar (to avoid multiple pillars being detected). A pillar is marked passed if it has moved past a horizontal target zone ```python if pillar["x"] < redTarget ``` or mark it 'too far' if the bottom ```python pillar["y"] + pillar["h"]``` is above a soft distance threshold (< 155) which indicates the pillar is still far vertically. Only when these conditions are met will the dictionary below be appended as the 'closest pillar':
 
 ```python
 {
@@ -431,10 +440,10 @@ angle = int(default_servo + (kp * pillar_error) + (kd * derivative_term))
 angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
 ```
 
-The sign/direction is restored when issuing a servo command by inverting the angle sign for green pillars. So the logic flow is: 
+The sign/direction is restored when issuing a servo command by inverting the angle sign for green pillars. 
 
 
- There are safety and context checks around pillar following. The code executes the pillar following only if a candidate pillar is selected and not too close to the wall. The areaLeft and areaRight checks prevent the robot from weaving away from the pillar when the adjacent wall is already too close. Pillar following is also not executed if we are currently in a left or right turn. 
+There are safety and context checks around pillar following. The code executes the pillar following only if a candidate pillar is selected and not too close to the wall. The areaLeft and areaRight checks prevent the robot from weaving away from the pillar when the adjacent wall is already too close. Pillar following is also not executed if we are currently in a left or right turn. 
 
 ```python
 if pillar_detected == True and not (closest_pillar_color == "green" and areaLeft >= 11000) and not (closest_pillar_color == "red" and areaRight >= 11000) and not (turn_Dir == "right" or turn_Dir == "left'):
@@ -587,8 +596,6 @@ Summary in plain words
 
 #### Parking
 ##### Exiting Parking Spot
-
-
 How do we enter the parking spot after 3 rounds?
 How do we manage color detection between red pillars and magenta parking lot walls?
 
