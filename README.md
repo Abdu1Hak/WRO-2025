@@ -52,8 +52,8 @@ File Name | Description
 3. Video of Open Challenge - Annotated
    
 9. Finish Mobility Management - includes pictures, chassis design, motors, servo, improvements, final product -- AARAV
-10. Power and Sense Management - ElectroMechanical Diagram - Power and wiring, sensors, hat, expansion board, etc.
-11. Fix Obstacle Challenge Code - Organize it, .... # Sep. 1
+10. More pictures in software documentation
+11. Fix Obstacle Challenge Code - Organize it
 12. Video it
 13. Finish Documentation of Parking and Turning
 14. SUBMIT - 6 Days Left!
