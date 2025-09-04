@@ -2,14 +2,14 @@
 
 ### Team Members 
 
-<img src="[https://drive.google.com/file/d/1sF6FegXFqu0r4o7zIjrYDKxvXBhM19wE/preview](https://drive.google.com/uc?export=view&id=1sF6FegXFqu0r4o7zIjrYDKxvXBhM19wE)" width="640" height="480" allow="autoplay" />
+<img width="713" height="671" alt="image" src="https://github.com/user-attachments/assets/b72c08db-f416-4baa-a63d-0307d5091035" />
 
 > Team Members
 - Abdul Farooqi, 17, abdulfarooqi@gmail.com
 - Aarav Daudia, 16, f18astro@gmail.com
 
 > Coach
-- Vikramjeet Singh, ...
+- Vikramjeet Singh, singhvikramjeet557@gmail.com
 
 ### Repository Contents
 
