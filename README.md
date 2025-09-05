@@ -53,14 +53,6 @@ File Name | Description
 
 
 
-9. Finish Mobility Management - includes pictures, chassis design, motors, servo, improvements, final product -- AARAV
-10. More pictures in software documentation
-11. Fix Obstacle Challenge Code - Organize it
-12. Video it
-13. Finish Documentation of Parking and Turning
-14. SUBMIT - 6 Days Left!
-
-
 ## 1. Objective of the Game
 
 ### The Challenge
@@ -287,7 +279,6 @@ erode = cv2.erode(mask, kernel, iterations=1)
 dilate = cv2.dilate(erode, kernel)
 ```
 
-# ------- INSERT IMAGE Of Dilated Picture
 
 Now that we can extract the available contours, we use ``` cv2.findContours() ``` to find continuous shapes in the mask, only considering the outermost contours and compressing unnecessary points to simplify contour shapes. The result is a list of all contours that represent detected objects in that ROI. To show this detection in real time, we create a rectangular box around the contour and take the largest contour area for steering calculations. The result of all these operations is that we can successfully detect the two parallel walls and the line infront, calculate how much of the contours are visible in that area, and eventually use these values to perform corrective steering.
 
@@ -327,7 +318,7 @@ angle = int(MID_SERVO + (kp * areaDiff) + (kd * derivative_term))
 servo_angle_queue.put(angle)
 ```
 
-# ----- INSERT PICTURE HERE OF WALL DETECTION AND STEERING CALCULATION IN TERMINAL
+<img width="432" height="346" alt="image" src="https://github.com/user-attachments/assets/0cbd0e57-b89d-4be6-b943-632aa08fefb6" /><img width="437" height="309" alt="image" src="https://github.com/user-attachments/assets/2701bc13-2551-42c1-806d-71e6cd640ca0" />
 
 
 #### Turning
@@ -428,6 +419,8 @@ elif closest_pillar_color == "green" and closest_pillar_area > Green_grav_const:
 else:
     target = 0              # no pillar target, fall back to wall logic
 ```
+<img width="437" height="347" alt="image" src="https://github.com/user-attachments/assets/52566ae6-7cc2-42e9-b982-5019e2e44864" /><img width="440" height="307" alt="image" src="https://github.com/user-attachments/assets/40de7b48-b595-4df7-a1cf-1f405fc3c983" />
+
 
 The actual steering is likewise PD-based and computed from the horizontal difference between the pillar center and the selected target value. The code builds an error and a derivative term as: 
 
