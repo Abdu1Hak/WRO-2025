@@ -1,8 +1,19 @@
 import cv2 as cv
 from picamera2 import Picamera2
 import sys
-from masks import rMagenta, rRed, rGreen, rBlue, rOrange, rBlack
 import numpy as np
+
+
+# LAB ranges directly here instead of masks.py
+rMagenta = [[0, 150, 150], [255, 200, 200]]
+rRed     = [[0, 160, 140], [255, 200, 200]]
+rGreen   = [[0, 120, 140], [255, 160, 200]]
+rBlue    = [[0, 140, 160], [255, 180, 200]]
+rOrange  = [[0, 150, 130], [255, 200, 180]]
+rBlack   = [[0, 0, 0], [50, 120, 120]]
+
+
+
 
 # Max value for LAB components
 max_value = 255
@@ -18,10 +29,14 @@ maskDict = {
     "black": rBlack
 }
 
-#set mask based on program arguments
+mask = [[0,0,0], [255,255,255]]
+
 if len(sys.argv) > 1:
-    mask = maskDict[sys.argv[1].lower()]
-            
+	arg = sys.argv[1].lower()
+	if arg in maskDict:
+		mask = maskDict(arg)
+	else:
+		print("DEF")            
     
 low_L = mask[0][0]
 low_A = mask[0][1]
