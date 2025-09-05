@@ -48,6 +48,7 @@ i2c = busio.I2C(board.SCL, board.SDA)
 
 kernel = np.ones((5, 5), np.uint8)   # a 5x5 square kernel
 
+
 i = 0
 
 ang = 0
@@ -55,6 +56,10 @@ ang = 0
 turn_End = False
 
 turn_just_ended = False
+
+stop_Turn = False
+
+park_DIR = None
 
 
 # Global Functions
@@ -199,7 +204,7 @@ def motor_drive():
 
         if command == "drive":
             print("Drive")
-            pwm.Drive(DC_MOTOR_PWM1, 0.45, "CW", pwm)
+            pwm.Drive(DC_MOTOR_PWM1, 0.65, "CW", pwm)
 
         elif command == "backtrack":
             # brief brake helps some drivers before reversing
@@ -298,6 +303,7 @@ if __name__ == '__main__':
 
     # PD Steering - Pillars
     #kp = 0.035
+    #kp = 0.035
     kp = 0.045
     kd = 0.005
     
@@ -310,7 +316,7 @@ if __name__ == '__main__':
     # Color Ranges
     rBlack = [np.array([0,110,112]), np.array([60, 149, 154])]
    # rBlue = [np.array([55, 123, 31]), np.array([200, 172, 125])]
-    rBlue = [np.array([160, 115, 115]), np.array([225, 145, 145])]
+    rBlue = [np.array([40, 125, 0]), np.array([225, 0, 121])]
     rOrange = [np.array([0, 162, 176]), np.array([255,196,204])]
     #rGreen = [np.array([0, 45, 0]), np.array([255, 114, 163])]
     rGreen = [np.array([0, 40, 0]), np.array([255, 120, 170])]
@@ -966,7 +972,7 @@ if __name__ == '__main__':
 
 
 
-            print("ALMOST")
+            #print("ALMOST")
             
             
                     
@@ -1021,8 +1027,10 @@ if __name__ == '__main__':
     motor_command_queue.put("drive") 
     servo_angle_queue.put(0)
     while True:
-		
-        print("Main Loop has Begun")
+        
+        if areaLineBlue > line_threshold:
+            print("DETECTING BLUE")
+        #print("Main Loop has Begun")
         
         pillar_detected = None # Stores the current pillar and next one if spotted
         
@@ -1100,14 +1108,14 @@ if __name__ == '__main__':
             # CASE A: Pillar is too far# pillar["y"] + pillar["h"]) >= 370 and 
             if pillar["x"] < redTarget:
                 previous_pillar = "red"
-                print("PILLAR HAS BEEN PASSED")
+                #print("PILLAR HAS BEEN PASSED")
                 pillar_detected  = False
                 continue 
                 
             # CASE B: pillar is passed
             elif (pillar["y"] + pillar["h"] ) < 155:
                 pillar_detected  = False
-                print("Pillar too far")
+                #print("Pillar too far")
                 continue
             
             # CASE C: Update Pillar data
@@ -1135,13 +1143,13 @@ if __name__ == '__main__':
             # CASE A: pillar is close and pass the target zone horizontally #pillar["y"] + pillar["h"]) >= 370 and
             if pillar["x"] > greenTarget:
                 previous_pillar = "green"
-                print("PILLAR HAS BEEN PASSED")
+                #print("PILLAR HAS BEEN PASSED")
                 pillar_detected = False
                 continue 
                 
             # CASE B: bottom_y_cord of the pillar is too far
             elif (pillar["y"] + pillar["h"] ) < 155: # Soft mark for too far (frame is 100-400 on the y)
-                print("Pillar too far")
+                #print("Pillar too far")
                 pillar_detected  = False
                 continue 
             
@@ -1211,34 +1219,29 @@ if __name__ == '__main__':
                 track_Dir = None 
                 turn_just_ended = True
                 
-       # if track_Dir == "right" and areaLineOrange > line_threshold:
-        #    turn_counter += 1
-         #   print(turn_counter)
 
-			
-     #   elif track_Dir == "left" and areaLineBlue > line_threshold:
-      #      turn_counter += 1
-       #     print(turn_counter)
-			
-#        else:
- #           turn_counter += 0
      
         if track_Dir == "left" and areaLineBlue > line_threshold:
-            if areaLineOrange <= line_threshold and closest_pillar_color == "green":
-                kp = 0.034
-                greenTarget = 550
-                angle -= (turn_Deg - 4)
-                print("Left")
-            elif areaLineOrange < line_threshold and closest_pillar_color == "red":
-                ang = angle - 15
-                angle = ang
-                print("Left")
-            elif areaLineOrange < line_threshold and closest_pillar_color == None:
-                angle -= (turn_Deg - 8)
-                print("Left")
+            print("LEFT FOR GREEN")
+            
+            
+           # if areaLineOrange < line_threshold and closest_pillar_color == "green":
+            #    kp = 0.034
+             #   greenTarget = 550
+              #  angle -= (turn_Deg - 4)
+                
+           # elif areaLineOrange < line_threshold and closest_pillar_color == "red":
+            #    ang = angle - 15
+             #   angle = ang
+              #  print("GREEN FOR RED")
+            if areaLineOrange < line_threshold:
+                redTarget = 120
+                angle -= (10)
+                print("SHARP LEFT")
             elif areaLineOrange >= line_threshold:
                 kp = 0.045
                 greenTarget = 600
+                redTarget = 60
                 turn_End = True
                 turn_counter += 1
                 print(f"Turn {turn_counter} (LEFT)")
@@ -1322,14 +1325,14 @@ if __name__ == '__main__':
             else:
                 #print("WALL FOLLOW")
                 angle = max(-TURN_DEGREE, min(angle, TURN_DEGREE))
-                print("WALL FOLLOWING ANGLE: ", angle)
+                #print("WALL FOLLOWING ANGLE: ", angle)
                 servo_angle_queue.put(angle)
         
         if waiting_for_release:
             if areaLineBlue < line_threshold and areaLineOrange < line_threshold:
                 line_released = True
                 waiting_for_release = False
-                print("LINE CLEARED, READY FOR NEXT TURN")
+                #print("LINE CLEARED, READY FOR NEXT TURN")
                 
                 
                 
@@ -1378,7 +1381,7 @@ if __name__ == '__main__':
     # End the backtrack when the timer expires
         if backtrack_active:
             if time.time() >= backtrack_end_time:
-                print("WALL: backtrack finished -> DRIVE")
+                #print("WALL: backtrack finished -> DRIVE")
                 motor_command_queue.put("drive")
                 backtrack_active = False
             
@@ -1424,11 +1427,290 @@ if __name__ == '__main__':
               # Make sure to break out of the while loop
               
               
-        if turn_counter >= 12:
+        if turn_counter == 13:
             print("Completed 12 turns, stopping.")
             motor_command_queue.put("stop")
-            servo_angle_queue.put(None)
             break
+            
+            
+            
+    servo_angle_queue.put(0)
+    stop_Turn = False
+
+
+
+    while True:
+    	print("CLOCK")
+    	picam2.start()
+
+    	pillar_detected = None # Stores the current pillar and next one if spotted
+
+    	# Pillar Closest Data
+    	closest_pillar_distance = 10000 # relatively large num, meant to be overridee
+    	closest_pillar_color = None
+    	closest_pillar_x = None
+    	closest_pillar_y = None
+    	closest_pillar_area = 0
+		
+    	# Setup display
+    	frame = picam2.capture_array()
+    	lab = cv2.cvtColor(frame, cv2.COLOR_BGR2Lab) 
+    	frame = display_roi(frame,  [ROI_LEFT_WALL, ROI_RIGHT_WALL, ROI_MAIN, ROI_CENTER, ROI_LINE, ROI_BLACK, ROI_UPP1, ROI_UPP2], (255, 204, 0))
+
+    	y1 = 0
+    	y2 = frame.shape[0]
+
+    	# Get contours of the Line, wall, pillar
+    	cLeftWall = get_contours(ROI_LEFT_WALL, lab, rBlack )
+    	cRightWall = get_contours(ROI_RIGHT_WALL, lab, rBlack)
+    	cparking = get_contours(ROI_LEFT_WALL, lab, rMagenta)
+
+    	cLW_UPP = get_contours(ROI_UPP1, lab, rBlack )
+    	cRW_UPP = get_contours(ROI_UPP2, lab, rBlack )
+
+
+    	cCenterWall = get_contours(ROI_CENTER, lab, rBlack)
+
+    	cListLineOrange = get_contours(ROI_LINE, lab, rOrange)
+    	cListLineBlue = get_contours(ROI_LINE, lab, rBlue )
+
+    	cListPillarGreen = get_contours(ROI_MAIN, lab, rGreen)
+    	cListPillarRed, dilate = get_red_contours(ROI_MAIN, lab, rRed)
+
+    	cListCoreRed = get_contours(ROI_CENTER, lab, rRed)
+    	cListCoreGreen = get_contours(ROI_CENTER, lab, rGreen)
+    	cListCoreBlack = get_contours(ROI_BLACK, lab, rBlack)
+
+    	# Center black: we'll create a mask and analyze largest contour
+    	center_seg_black = lab[ROI_BLACK[1]:ROI_BLACK[3], ROI_BLACK[0]:ROI_BLACK[2]]
+    	black_mask = cv2.inRange(center_seg_black, rBlack[0], rBlack[1])
+    	black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+    	black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+
+	    # Area of Lines
+    	areaLineOrange = detect_contour(cListLineOrange, ROI_LINE, frame)
+    	areaLineBlue = detect_contour(cListLineBlue, ROI_LINE, frame)
+	  
+    	# Wall areas
+    	areaLeft = detect_contour(cLeftWall, ROI_LEFT_WALL, frame)
+    	areaRight = detect_contour(cRightWall, ROI_RIGHT_WALL, frame)
+    	areaRightUPP = detect_contour(cRW_UPP, ROI_UPP2, frame)
+    	areaLeftUPP = detect_contour(cLW_UPP, ROI_UPP1, frame)
+    	areaLeftPARK = detect_contour(cparking, ROI_LEFT_WALL, frame)
+
+    	# CENTER FOR BACKTRACK
+    	areaRedCenter = detect_contour(cListCoreRed, ROI_CENTER, frame)
+    	areaGreenCenter = detect_contour(cListCoreGreen, ROI_CENTER, frame)
+
+    	# Compute largest black contour info for ROI_BLACK
+    	areaBlackCenter, black_bbox, black_box_h = largest_contour_info(black_mask, ROI_BLACK)
+
+
+	       # Move servo to 30°
+		
+		
+    		   # Calculate FPS
+    	current_time = time.time()
+    	fps = 1 / (current_time - prev_time)
+    	prev_time = current_time
+
+    	# Display FPS on frame
+    	cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30),
+    	cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+				   
+    	cv2.imshow('USB CameFd', frame)
+
+    	key = cv2.waitKey(1) & 0xFF
+
+    	# ----- RED PILLAR DETECTION ------
+
+    	# Stores Red Pillar Data: area, cords, and distance
+    	PillarsRed = filter_pillars(cListPillarRed, frame, closest_pillar_distance, pillar_threshold, ROI_MAIN)
+
+    	for pillar in PillarsRed:
+	
+	    	# ignore the pillar if it is not the closest (determined by distance)
+    		if (pillar["area"] < closest_pillar_area * 0.9) and (pillar["distance"] > closest_pillar_distance * 0.9):
+	            continue
+		
+	    	# CASE A: Pillar is too far# pillar["y"] + pillar["h"]) >= 370 and 
+	    	if pillar["x"] < redTarget:
+	            previous_pillar = "red"
+	            print("PILLAR HAS BEEN PASSED")
+	            pillar_detected  = False
+	            continue 
+		
+	    	# CASE B: pillar is passed
+	    	elif (pillar["y"] + pillar["h"] ) < 155:
+	            pillar_detected  = False
+	            print("Pillar too far")
+	            continue
+	
+	    	# CASE C: Update Pillar data
+	    	else:
+	            closest_pillar_distance = pillar["distance"]
+	            closest_pillar_color = "red"
+	            closest_pillar_x = pillar["x"]
+	            closest_pillar_y = pillar["y"]
+	            closest_pillar_area = pillar["area"]
+	            pillar_detected = True
+	            #print("Distance: ", closest_pillar_distance, " Color: ", closest_pillar_color, " Cords: ", closest_pillar_x,closest_pillar_y, " AREA: ", closest_pillar_area)
+
+				
+
+    	# ----- GREEN PILLAR DETECTION ------
+
+    	PillarsGreen = filter_pillars(cListPillarGreen, frame, closest_pillar_distance, pillar_threshold, ROI_MAIN)
+
+    	for pillar in PillarsGreen:
+
+	    	# ignore the pillar if it is not the closest (determined by distance)
+	    	if (pillar["area"] < closest_pillar_area * 0.9) and (pillar["distance"] > closest_pillar_distance * 0.9):
+	    		continue
+
+	    	# CASE A: pillar is close and pass the target zone horizontally #pillar["y"] + pillar["h"]) >= 370 and
+	    	if pillar["x"] > greenTarget:
+	    		previous_pillar = "green"
+	    		print("PILLAR HAS BEEN PASSED")
+	    		pillar_detected = False
+	    		continue 
+		
+	    	# CASE B: bottom_y_cord of the pillar is too far
+	    	elif (pillar["y"] + pillar["h"] ) < 155: # Soft mark for too far (frame is 100-400 on the y)
+		    	print("Pillar too far")
+		    	pillar_detected  = False
+		    	continue 
+	
+		    # CASE C: Update Pillar data
+	    	else:
+		    	closest_pillar_distance = pillar["distance"]
+		    	closest_pillar_color = "green"
+		    	closest_pillar_x = pillar["x"]
+		    	closest_pillar_y = pillar["y"]
+		    	closest_pillar_area = pillar["area"]
+		    	pillar_detected = True
+    			#print("Distance: ", closest_pillar_distance, " Color: ", closest_pillar_color, " Cords: ", closest_pillar_x,closest_pillar_y, " AREA: ", closest_pillar_area)
+
+
+			   
+    	# ---- TARGET SELECTION ----
+
+
+    	print(closest_pillar_area)
+
+
+    	if closest_pillar_color == "red" and closest_pillar_area > Red_grac_const:
+	    	target = redTarget
+	    	cv2.line(frame, (redTarget, y1), (redTarget, y2), (0, 0, 255), 2)
+    	elif closest_pillar_color == "green" and closest_pillar_area > Green_grav_const:
+		    target = greenTarget
+		    cv2.line(frame, (greenTarget, y1), (greenTarget, y2), (0, 255, 0), 2)
+    	else:
+	    	# Treat as "no pillar" so wall/black logic can run
+	    	target = 0
+		
+
+
+    	if track_Dir is None and line_released and not waiting_for_release:
+	        if areaLineBlue > line_threshold: 
+	            track_Dir = "CCW"
+	            line_released = False  # Reset for this turn
+	            print(track_Dir)
+
+	        elif areaLineOrange > line_threshold:
+	            track_Dir = "CW"
+	            line_released = False
+	            print(track_Dir)
+	        
+
+			
+    	print (areaLeft)
+    	if track_Dir == "CCW":
+	    	if areaLeft > 1:
+		    	park_DIR = "LEFT"
+		    	pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)
+		    	turn_End = True
+	    		print("Turn Done)")
+	    		track_Dir = None 
+	    		turn_just_ended = True	
+	    				
+	    		break
+	    	elif areaLineBlue > line_threshold and not stop_Turn:
+		    	print("Detected")
+		    	stop_Turn = True
+	    		pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "CW", 1.5, pwm)
+	    		servo_angle_queue.put(30)
+	    		pwm.Drive(DC_MOTOR_PWM1, 0.6 , "CW", pwm)
+	    	else:
+	    		pass
+	    		
+    	if track_Dir == "CW":
+	    	if areaRight > 1:
+		    	park_DIR = "RIGHT"
+		    	pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)
+		    	turn_End = True
+	    		print("Turn Done)")
+	    		track_Dir = None 
+	    		turn_just_ended = True	
+	    				
+	    		break
+	    	elif areaLineOrange > line_threshold and not stop_Turn:
+		    	print("Detected")
+		    	stop_Turn = True
+	    		pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "CW", 1.5, pwm)
+	    		servo_angle_queue.put(-30)
+	    		pwm.Drive(DC_MOTOR_PWM1, 0.6 , "CW", pwm)
+	    	else:
+	    		pass
+
+			
+				
+    time.sleep(1.0)	
+    servo_angle_queue.put(0)
+
+					
+					
+    if park_DIR == "LEFT":				
+		
+    	pwm.Drive_time(DC_MOTOR_PWM1, 0.6, "CW", 2.0, pwm)
+
+    	pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)	
+    		
+    	pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "CCW", 0.2, pwm)
+    	
+    	pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)	
+    	
+
+    	
+    	pwm.Drive_time(DC_MOTOR_PWM1, 0.6, "CCW", 1.0, pwm)
+    	
+    	pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)	
+
+    	
+    	servo_angle_queue.put(-25)
+    	
+    	pwm.Drive_time(DC_MOTOR_PWM1, 0.6, "CCW", 1.2, pwm)
+
+
+    	
+    	pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)	
+		
+    	servo_angle_queue.put(1)
+
+		
+    	pwm.Drive_time(DC_MOTOR_PWM1, 0.6, "CW", 5.35, pwm)
+
+    	pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)		
+
+    	servo_angle_queue.put(-30)
+
+    	pwm.Drive_time(DC_MOTOR_PWM1, 0.6, "CCW", 2.4, pwm)	
+    	
+    	pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)
+
+    	
+    	park_DIR = None		
 
             
     t1.join()
