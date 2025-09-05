@@ -308,7 +308,7 @@ if __name__ == '__main__':
     kd = 0.005
     
     # PD Steering - Walls
-    kp_walls = 0.003
+    kp_walls = 0.005
     kd_walls = 0.0004
 
     yKp = 0.0015 # How much it should steer relative to the y-axis of the pillar (more if closer)
@@ -316,7 +316,7 @@ if __name__ == '__main__':
     # Color Ranges
     rBlack = [np.array([0,110,112]), np.array([60, 149, 154])]
    # rBlue = [np.array([55, 123, 31]), np.array([200, 172, 125])]
-    rBlue = [np.array([40, 125, 0]), np.array([225, 0, 121])]
+    rBlue = [np.array([0, 0, 0]), np.array([200, 255, 125])]
     rOrange = [np.array([0, 162, 176]), np.array([255,196,204])]
     #rGreen = [np.array([0, 45, 0]), np.array([255, 114, 163])]
     rGreen = [np.array([0, 40, 0]), np.array([255, 120, 170])]
@@ -350,7 +350,7 @@ if __name__ == '__main__':
     #redTarget = 120 
    # greenTarget = 520
    
-    redTarget = 60 
+    redTarget = 140 
     greenTarget = 580
     
     # ERRORS
@@ -527,7 +527,7 @@ if __name__ == '__main__':
     cListCoreGreen = get_contours(ROI_CENTER, lab, rGreen)
     cListCoreBlack = get_contours(ROI_BLACK, lab, rBlack)
 
-    # Center black: we'll create a mask and analyze largest contour
+    # Center black: we'll create a mask and analyzeqqq largest contour
     center_seg_black = lab[ROI_BLACK[1]:ROI_BLACK[3], ROI_BLACK[0]:ROI_BLACK[2]]
     black_mask = cv2.inRange(center_seg_black, rBlack[0], rBlack[1])
     black_mask = cv2.morphologyEx(black_mask, cv2.MORPH_OPEN, kernel, iterations=1)
@@ -541,6 +541,7 @@ if __name__ == '__main__':
     # Wall areas
     areaLeft = detect_contour(cLeftWall, ROI_LEFT_WALL, frame)
     areaRight = detect_contour(cRightWall, ROI_RIGHT_WALL, frame)
+    
     areaRightUPP = detect_contour(cRW_UPP, ROI_UPP2, frame)
     areaLeftUPP = detect_contour(cLW_UPP, ROI_UPP1, frame)
     
@@ -552,8 +553,6 @@ if __name__ == '__main__':
     areaBlackCenter, black_bbox, black_box_h = largest_contour_info(black_mask, ROI_BLACK)
     
     
-       # Move servo to 30°
-            
             
            # Calculate FPS
     current_time = time.time()
@@ -572,8 +571,6 @@ if __name__ == '__main__':
 
 
     if areaRight > areaLeft:
-
-
         while True:
             print("CLOCK")
             picam2.start()
@@ -668,7 +665,7 @@ if __name__ == '__main__':
                     continue
                 
                 # CASE A: Pillar is too far# pillar["y"] + pillar["h"]) >= 370 and 
-                if pillar["x"] < redTarget:
+                if pillar["x"] < 20:
                     previous_pillar = "red"
                     print("PILLAR HAS BEEN PASSED")
                     pillar_detected  = False
@@ -895,7 +892,7 @@ if __name__ == '__main__':
                     continue
                 
                 # CASE A: Pillar is too far# pillar["y"] + pillar["h"]) >= 370 and 
-                if pillar["x"] < redTarget:
+                if pillar["x"] < 20:
                     previous_pillar = "red"
                     print("PILLAR HAS BEEN PASSED")
                     pillar_detected  = False
@@ -968,7 +965,7 @@ if __name__ == '__main__':
                 cv2.line(frame, (greenTarget, y1), (greenTarget, y2), (0, 255, 0), 2)
             else:
                 # Treat as "no pillar" so wall/black logic can run
-                target = 0
+                pass
 
 
 
@@ -1106,7 +1103,7 @@ if __name__ == '__main__':
                 continue
                 
             # CASE A: Pillar is too far# pillar["y"] + pillar["h"]) >= 370 and 
-            if pillar["x"] < redTarget:
+            if pillar["x"] < 20:
                 previous_pillar = "red"
                 #print("PILLAR HAS BEEN PASSED")
                 pillar_detected  = False
@@ -1191,6 +1188,15 @@ if __name__ == '__main__':
             if areaLineBlue > line_threshold: 
                 track_Dir = "left"
                 line_released = False  # Reset for this turn
+                turn_counter += 1
+                print(f"Turn {turn_counter} (LEFT)")
+                print("---------------------------")
+                print("---------------------------")
+                print("---------------------------")
+                track_Dir = None  # RESET IMMEDIATELY
+                turn_just_ended = True
+                print(track_Dir)
+                
                 print(track_Dir)
 
             elif areaLineOrange > line_threshold:
@@ -1222,29 +1228,21 @@ if __name__ == '__main__':
 
      
         if track_Dir == "left" and areaLineBlue > line_threshold:
-            print("LEFT FOR GREEN")
+            print("LEFT TURN DETECTED")
             
-            
-           # if areaLineOrange < line_threshold and closest_pillar_color == "green":
-            #    kp = 0.034
-             #   greenTarget = 550
-              #  angle -= (turn_Deg - 4)
-                
-           # elif areaLineOrange < line_threshold and closest_pillar_color == "red":
-            #    ang = angle - 15
-             #   angle = ang
-              #  print("GREEN FOR RED")
-            if areaLineOrange < line_threshold:
-                redTarget = 120
-                angle -= (10)
+           
+            if areaLineBlue > line_threshold:
+                redTarget = 140
+                angle -= 15
                 print("SHARP LEFT")
-            elif areaLineOrange >= line_threshold:
-                kp = 0.045
-                greenTarget = 600
-                redTarget = 60
+            elif areaLineOrange >= line_threshold and areaLineBlue < line_threshold:
+                #kp = 0.045
+                #greenTarget = 600
+                redTarget = 140
                 turn_End = True
-                turn_counter += 1
+                #turn_counter += 1
                 print(f"Turn {turn_counter} (LEFT)")
+                print("---------------------------")
                 track_Dir = None 
                 turn_just_ended = True
 
@@ -1263,7 +1261,7 @@ if __name__ == '__main__':
         
         
         
-        if pillar_detected == True and not (closest_pillar_color == "green" and areaLeft >= 11000) and not (closest_pillar_color == "red" and areaRight >= 11000) and not (turn_Dir == "right" or turn_Dir == "left"):
+        if pillar_detected == True and not (closest_pillar_color == "green" and areaLeft >= 11000) and not (closest_pillar_color == "red" and areaRight >= 11000):
             #print("PILLAR FOLLOWING")
             # Back track if needed or use pillars for pd steering
               
@@ -1278,6 +1276,7 @@ if __name__ == '__main__':
                      servo_angle_queue.put(0)
             
             print(closest_pillar_x)         
+            
             if closest_pillar_x is not None:
                 pillar_error = abs(target - closest_pillar_x)
                 # continue with PD control, etc.
@@ -1295,6 +1294,9 @@ if __name__ == '__main__':
             else:
                 # no pillar detected this frame, maybe keep driving straight
                 pillar_error = 0
+            
+
+                
 
             
     
@@ -1427,14 +1429,14 @@ if __name__ == '__main__':
               # Make sure to break out of the while loop
               
               
-        if turn_counter == 13:
+        if turn_counter == 5:
             print("Completed 12 turns, stopping.")
             motor_command_queue.put("stop")
             break
             
             
             
-    servo_angle_queue.put(0)
+    #servo_angle_queue.put(0)
     stop_Turn = False
 
 
@@ -1535,7 +1537,7 @@ if __name__ == '__main__':
 	            continue
 		
 	    	# CASE A: Pillar is too far# pillar["y"] + pillar["h"]) >= 370 and 
-	    	if pillar["x"] < redTarget:
+	    	if pillar["x"] < 20:
 	            previous_pillar = "red"
 	            print("PILLAR HAS BEEN PASSED")
 	            pillar_detected  = False
