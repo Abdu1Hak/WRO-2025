@@ -1,13 +1,15 @@
 # The Robertos Engineering Documentation | WRO-2025 ⚙️⚙️⚙️
 
-### Team Members 
+### Team Members/Introductions
 
 <img width="713" height="671" alt="image" src="https://github.com/user-attachments/assets/b72c08db-f416-4baa-a63d-0307d5091035" />
 
 
 > Team Members
-- Abdul Farooqi, 17, abdulfarooqi@gmail.com
+
 - Aarav Daudia, 16, f18astro@gmail.com
+  - Hello Judges, my name is Aarav, I am in grade 11, and this is my first year competing in WRO Future Engineers. My robotics competition experience includes WRO Robosports, Zone_01, FLL, VEX, and FRC. I chose to compete in this competition this year mainly due to its endless learning opportunities. This competition is like no other in the sense that it allows near-limitless freedom in how competitors can design their robots with a very interest challenge, making it a very appealing competition to enter. I am looking forward to this year!
+- Abdul Farooqi, 17, abdulfarooqi@gmail.com
 
 > Coach
 - Vikramjeet Singh, singhvikramjeet557@gmail.com
@@ -21,7 +23,7 @@ Five Items left in documentation - two pics, parking, assembly, and obstacle cha
 File Name | Description
 --- | ---
 [Build](https://github.com/Abdu1Hak/WRO-2025/tree/cc1186081c65a94e3f9d5a899eeedb2a14111d81/Build) | Explanations and descriptions for mechanical/robot build
-[Models](https://github.com/Abdu1Hak/WRO-2025/tree/main/Models) | Folder for models used by 3D printers to produce the mechanical elements on the car
+[Models](https://github.com/Abdu1Hak/WRO-2025/tree/main/Models) | Folder for models used by 3D printers to produce the mechanical elements on the car as well as explanations on individual parts used
 [t-photos](https://github.com/Abdu1Hak/WRO-2025/tree/main/t-photos) | Contains 2 Photos of all team members
 [v-photos](https://github.com/Abdu1Hak/WRO-2025/tree/main/v-photos) | Contains 6 Photos of the vehicle
 [video](https://github.com/Abdu1Hak/WRO-2025/tree/main/video) | Contains 2 Video links to the Car performing the Open and Obstacle Challenge
