@@ -94,7 +94,9 @@ This documentation serves as a consolidated record of our engineering process, h
 
 ## 3. Mobility Management
 
-PLEASE DO THIS ----------------------------------------------
+[Build](https://github.com/Abdu1Hak/WRO-2025/tree/cc1186081c65a94e3f9d5a899eeedb2a14111d81/Build) contains detailed notes and information on the mechanical build and design of our robot, from the different systems to the evolution of our robot over time. Furthermore, it contains information about the electronics utilized to give life as well as the power of thinking/brainpower to our robot.
+
+[Models](https://github.com/Abdu1Hak/WRO-2025/tree/main/Models) contains all necessary files related to our current robot design [V1](https://github.com/Abdu1Hak/WRO-2025/tree/c1ebd8a8a3756ba9235526e24f34e1ae4cf465f4/Models/V1) as well as [V0](https://github.com/Abdu1Hak/WRO-2025/tree/c1ebd8a8a3756ba9235526e24f34e1ae4cf465f4/Models/V0), which was the initial prototype/design for our robot, from which we learned many valuable lessons on how to build a robot from the ground up. Additionally, it contains comprehensive notes on each individual part used to construct our robot, about their design and utility.
 
 ## 4. Power and Sense Management
 
