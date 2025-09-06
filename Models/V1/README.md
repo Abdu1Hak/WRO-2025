@@ -1,1 +1,8 @@
-Notes
+#Models
+
+
+These are the individual parts that make up our final robot's build, having each part completely custom designed over using pre-made parts, such as LEGO, helped to keep our robot compact, efficient, and stable. Most of the parts were printed in standard PLA, however certain parts that are under excessive strain and are subject to breakage were printed in PLA-CF, or carbon fibre, to increase strength and reduce fragility. Some examples of these parts are the Axle Adapters or Steering Arms.
+
+| File Name | Description | 
+| ----------- | ----------- |
+| [Chassis (5).STL](https://github.com/Abdu1Hak/WRO-2025/blob/39ba8c59d8dfa675b6d5f0d3143fe6f86e9a5792/Models/V1/Chassis%20(5).STL) | The chassis is the base, the backbone of our robot, the part that everything is built off of. The chassis has four screw holes in the front for the fully assembled steering system/front axle assembly to attach directly into, making our design modular, and includes cutouts in the front to give room for the wheels to turn into. Behind this, there is a slot for the servo to slip into and rest in, with the walls perfectly hugging it to prevent the servo for flailing around. Further back down the chassis is a large rectangular enclosure to house the battery, having the battery veritcally mounted helps to reduce size and provide easier access to the battery outputs for power. Finally, fully at the back, the rear of the robot extends outwards to make room for both the axle supports as well as the motor and differential themselves. Between the screw holes for the differential supports, there is a small cutout for the differential to slip through in order to allow the rear axle to drop lower, aloowing us to utilize a wider variety of tires. |
