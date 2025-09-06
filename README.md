@@ -1,3 +1,5 @@
+
+
 # The Robertos Engineering Documentation | WRO-2025 ⚙️⚙️⚙️
 
 ### Team Members/Introductions
@@ -29,6 +31,7 @@ File Name | Description
 [video](https://github.com/Abdu1Hak/WRO-2025/tree/main/video) | Contains 2 Video links to the Car performing the Open and Obstacle Challenge
 [Schemes](https://github.com/Abdu1Hak/WRO-2025/tree/main/Schemes) | Contains several electrical schematic diagrams of the vehicle
 [src](https://github.com/Abdu1Hak/WRO-2025/tree/main/srcs) | Contains the main source code for the open and obstacle challenge + more
+[Strategy](https://github.com/Abdu1Hak/WRO-2025/tree/9a9273facb861a00dbbba50a4b800d718faf648d/Strategy) | Contains elaborate information about how we chose to "attack" this year's challenge
 [Other](https://github.com/Abdu1Hak/WRO-2025/tree/main/Other) | Other essential files
 
 
