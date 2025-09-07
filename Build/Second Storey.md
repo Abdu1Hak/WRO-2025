@@ -21,7 +21,7 @@ Issues:
 ## V2.0
 Features:
   - Rasberry Pi mount is lowered and moved further back to make design more compact as well as to prevent and blockage of the view from the camera.
-  - A 2.5 inch tall structure arises from the back of the second storey that acts as a camera mount for the new camera (*Insert Camera Name*)
+  - A 2.5 inch tall structure arises from the back of the second storey that acts as a camera mount for the new camera (Raspberry Pi Camera Module, Fisheye Lens)
       This contains a coutout from which a rectangular-shaped mount for the camera will sit, hanging from a cylinder that attaches through the entire structre, allowing the camera's angle to be adjusted.
     
 Issues:
