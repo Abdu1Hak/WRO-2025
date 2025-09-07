@@ -18,8 +18,6 @@
 - Vikramjeet Singh, singhvikramjeet557@gmail.com
 
 
-Five Items left in documentation - two pics, parking, assembly, and obstacle challenge video - and hardware compoenents detailed
-
 
 ### Repository Contents
 
