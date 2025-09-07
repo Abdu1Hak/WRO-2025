@@ -12,7 +12,7 @@
 - Aarav Daudia, 16, f18astro@gmail.com
   - Hello Judges, my name is Aarav, I am in grade 11, and this is my first year competing in WRO Future Engineers. My robotics competition experience includes WRO Robosports, Zone_01, FLL, VEX, and FRC. I chose to compete in this competition this year mainly due to its endless learning opportunities. This competition is like no other in the sense that it allows near-limitless freedom in how competitors can design their robots, with a very interesting challenge, making it a very appealing competition to enter. I am looking forward to this year!
 - Abdul Farooqi, 17, abdulfarooqi@gmail.com
-  - Hey Judges, my name is Abdul, a grade 12 student competing in WRO Future Engineers for the first time. My vast tech experience includes doing VEX and Arduino-based projects within school, developing firmware as part of a design team at Electrium Mobility, and working at a startup during the summer. I was drawn to this competition because of the freedom competitors have, allowing us to approach challenges in our own way. It’s a chance to explore new technologies, learn continuously, and design innovative solutions to real-world problems.
+  - Hey Judges, my name is Abdul, a grade 12 student competing in WRO Future Engineers for the first time. My vast tech experience includes doing VEX and Arduino-based projects within school, developing firmware as part of a design team at Electrium Mobility, and working at a startup during the summer. I was drawn to this competition because of the freedom competitors have, allowing us to approach challenges in our own way. It’s a chance to explore new technologies, learn continuously, and invent innovative solutions.
     
 > Coach
 - Vikramjeet Singh, singhvikramjeet557@gmail.com
