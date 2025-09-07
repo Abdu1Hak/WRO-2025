@@ -130,7 +130,7 @@ The Robot is composed of a minimal amount of sensors, motors, and a main process
       * Camera
       * Button
 
-More information on the Hardware Components can be found in [Build](https://github.com/Abdu1Hak/WRO-2025/tree/cc1186081c65a94e3f9d5a899eeedb2a14111d81/Build) 
+More information on the Hardware Components can be found in [Build](https://github.com/Abdu1Hak/WRO-2025/blob/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/Build/Electronics%5CHardware.md) 
 
 
 ### Management
