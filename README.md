@@ -612,7 +612,93 @@ elif areaLeft > areaRight:
 
 ###### 2) Turning Out
 
+After that we start running a ```python while``` loop depending on which of the above conditions are met. Within the while loop after setting up the necessary camera and ROI elements, the robot goes into a full steering lock (-30 for counter clockwise, 30 for clockwise) at 45% speed until two ROIs, that only appear during these loops (```python ROI_UPP1``` and ```python ROI_UPP2```) that appear in the above middile area of the frame, closer to either side along the x-axis, detetct even a hint of the inner wall (ROI_UPP1 for counter clockwise and ROI_UPP2 for clockwise), causing the robot to stop moving, as it this point is is guaranteed that the robot is perpendicular to the walls. We also make sure that the area of these ROIs are less than 8000 to prevent accidental detections.
 
+```python
+       
+servo_angle_queue.put(-30)
+
+# Start motor at 0.1 speed CW
+pwm.Drive(DC_MOTOR_PWM1, 0.45, "CW", pwm)
+print("ALMOST")
+
+if areaLeftUPP >= 1 and areaLeftUPP <= 8000: 
+    print("AHA")
+    pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
+    #pwm.Drive(DC_MOTOR_PWM1, 0.45, "CW", pwm)
+    print(closest_pillar_color)
+    print("A")
+    print(areaLeftUPP)
+```
+and
+```python
+servo_angle_queue.put(30)
+
+# Start motor at 0.1 speed CW
+pwm.Drive(DC_MOTOR_PWM1, 0.45, "CW", pwm)
+print("ALMOST(1)")
+
+if areaRightUPP >= 1 and areaRightUPP <= 8000: 
+    print("AHA(CW)")
+    pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
+    #pwm.Drive(DC_MOTOR_PWM1, 0.45, "CW", pwm)
+    print(closest_pillar_color)
+    print(areaRightUPP)
+```
+
+###### Beginning Main Loop/Detecting Inital Loop
+
+Finally, we start detecting obstacles. If the direction is counter clockwise and either a red obstacle or no obstacle is detected, we instruct the robot to go into full right steering lock (30), going fowards at half speed for one second before stopping the motor and breaking out of the loop for the main loop to commence. However, if a green obstacle is detected, the robot realigns the steering (0) to go forwards for one second at full speed and then turning at an angle of (15) towards the right for one second and full speed before breaking out of the loop.
+
+If the direction is clockwise, we perform the same code except for the opposite colour of obstacles and opposite direction of steering.
+
+```python
+if areaLeftUPP >= 1 and areaLeftUPP <= 8000: 
+    print("AHA")
+    pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
+    #pwm.Drive(DC_MOTOR_PWM1, 0.45, "CW", pwm)
+    print(closest_pillar_color)
+    print("A")
+    print(areaLeftUPP)
+ 
+    
+
+    if closest_pillar_color == None or closest_pillar_color == "red":
+        servo_angle_queue.put(30)	 
+        pwm.Drive_time(DC_MOTOR_PWM1, 0.5, "CW", 1.0, pwm)
+        pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
+                        
+    elif closest_pillar_color == "green":
+        servo_angle_queue.put(0)	 
+        pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "CW", 1.0, pwm)
+        servo_angle_queue.put(15)	 
+        pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "Cw", 1.0, pwm)
+
+    else:
+        print("Hath, thy error aprroaches me")
+
+break
+```
+and
+```python
+if closest_pillar_color == None or closest_pillar_color == "green":
+    print("N")
+    servo_angle_queue.put(-30)	 
+    pwm.Drive_time(DC_MOTOR_PWM1, 0.5, "CW", 1.0, pwm)
+    pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
+                              
+elif closest_pillar_color == "red":
+    print("R")
+    servo_angle_queue.put(0)	 
+    pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "CW", 1.0, pwm)
+    servo_angle_queue.put(-30)	 
+    pwm.Drive(DC_MOTOR_PWM1, 1.0, "Stop", pwm)
+
+else:
+    print("Hath, thy error aprroaches me")
+
+break
+```
 
 ##### Entering Parking Spot
 How do we enter the parking spot after 3 rounds?
