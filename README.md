@@ -24,14 +24,14 @@
 File Name | Description
 --- | ---
 [Build](https://github.com/Abdu1Hak/WRO-2025/tree/cc1186081c65a94e3f9d5a899eeedb2a14111d81/Build) | Explanations and descriptions for mechanical/robot build
-[Models](https://github.com/Abdu1Hak/WRO-2025/tree/main/Models) | Folder for models used by 3D printers to produce the mechanical elements on the car as well as explanations on individual parts used
-[t-photos](https://github.com/Abdu1Hak/WRO-2025/tree/main/t-photos) | Contains 2 Photos of all team members
-[v-photos](https://github.com/Abdu1Hak/WRO-2025/tree/main/v-photos) | Contains 6 Photos of the vehicle
-[video](https://github.com/Abdu1Hak/WRO-2025/tree/main/video) | Contains 2 Video links to the Car performing the Open and Obstacle Challenge
-[Schemes](https://github.com/Abdu1Hak/WRO-2025/tree/main/Schemes) | Contains several electrical schematic diagrams of the vehicle
-[src](https://github.com/Abdu1Hak/WRO-2025/tree/main/srcs) | Contains the main source code for the open and obstacle challenge + more
-[Strategy](https://github.com/Abdu1Hak/WRO-2025/tree/9a9273facb861a00dbbba50a4b800d718faf648d/Strategy) | Contains elaborate information about how we chose to "attack" this year's challenge
-[Other](https://github.com/Abdu1Hak/WRO-2025/tree/main/Other) | Other essential files
+[Models](https://github.com/Abdu1Hak/WRO-2025/tree/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/Models) | Folder for models used by 3D printers to produce the mechanical elements on the car as well as explanations on individual parts used
+[t-photos](https://github.com/Abdu1Hak/WRO-2025/tree/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/t-photos) | Contains 2 Photos of all team members
+[v-photos](https://github.com/Abdu1Hak/WRO-2025/tree/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/v-photos) | Contains 6 Photos of the vehicle
+[video](https://github.com/Abdu1Hak/WRO-2025/tree/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/video) | Contains 2 Video links to the Car performing the Open and Obstacle Challenge
+[Schemes](https://github.com/Abdu1Hak/WRO-2025/tree/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/Schemes) | Contains several electrical schematic diagrams of the vehicle
+[src](https://github.com/Abdu1Hak/WRO-2025/tree/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/src) | Contains the main source code for the open and obstacle challenge + more
+[Strategy](https://github.com/Abdu1Hak/WRO-2025/tree/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/Strategy) | Contains elaborate information about how we chose to "attack" this year's challenge
+[Other](https://github.com/Abdu1Hak/WRO-2025/tree/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/Other) | Other essential files
 
 
 ### README Contents
