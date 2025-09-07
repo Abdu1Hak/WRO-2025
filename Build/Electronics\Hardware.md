@@ -29,4 +29,5 @@ This section discusses the various hardware components that we utilize to comple
 | YFROBOT Metal Gearmotor | 1 | $34.00 |
 | Miuzei MG90S 9G Micro Servo Motor | 1 | $8.99 | 
 | 12V lithium-ion power bank (TalentCell YB1203000-USB | 1 | $42.99 |
-| Total Price | 1 Robot| $333.07 |
+| Miscellanious (3d print material, wires, etc.) | 1 | $30.00 |
+| Total Price | 1 Robot| $363.07 |
