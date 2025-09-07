@@ -594,6 +594,27 @@ Summary in plain words
 
 #### Parking
 ##### Exiting Parking Spot
+
+Exiting the parking spot is a decievingly difficult task to complete, involving multiple loops as well as endless lines of code to simply scan the frames.
+
+###### 1) Detecting Orientation
+
+Initial, we run simple scanning code for only one frame to detect on which side we detect the outer wall (if the right side detects black then counter clockwise orientation, if black detected on left side, then clockwise orientation.
+
+'''python
+if areaRight > areaLeft:
+'''
+and subsequently:
+
+'''python
+elif areaLeft > areaRight:
+'''
+
+###### 2) Turning Out
+
+
+
+##### Entering Parking Spot
 How do we enter the parking spot after 3 rounds?
 How do we manage color detection between red pillars and magenta parking lot walls?
 
