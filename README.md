@@ -701,8 +701,128 @@ break
 ```
 
 ##### Entering Parking Spot
-How do we enter the parking spot after 3 rounds?
-How do we manage color detection between red pillars and magenta parking lot walls?
+With the new rule clarification as of September 2 stating we must clear the first obstacle on the final straight before parking, our parking code became quite complex.
+
+###### 1) Commencing Parking:
+Once our turn counter within our main loop detects the thirteenth turn, it breaks out of the main loop, stopping the main loop and commencing the parking loop.
+
+If the first line detected is blue, the ```python track_Dir``` variable is set to ```python "CCW"```, or ```python "CW"``` for orange.
+
+```python
+if track_Dir is None and line_released and not waiting_for_release:
+  if areaLineBlue > line_threshold: 
+      track_Dir = "CCW"
+      line_released = False  # Reset for this turn
+      print(track_Dir)
+  
+  elif areaLineOrange > line_threshold:
+      track_Dir = "CW"
+      line_released = False
+      print(track_Dir)
+```
+
+###### 2) Turning:
+
+An ```python if``` statements detects the value for ```python track_Dir``` and if it is ```python CCW```, the robot goes forward for one and a half seconds at full speed before going into a full right steering lock (30) at 60% speed until the outer wall is detected on the left side ```python areaLeft > 1```, letting us know that we are perpendicular to the outer wall, stopping the turn, and breaking out of the loop, before resetting the servo and pausing for one second. Finally we set the variable ```python park_Dir``` to its appropriate direction.
+
+The opposite steering direction (-30) and opposite side ``python areaRight``` are utilized if ```python track_Dir == "CW"```.
+
+```python
+if track_Dir == "CCW":
+  if areaLeft > 1:
+    park_DIR = "LEFT"
+    pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)
+    turn_End = True
+    print("Turn Done)")
+    track_Dir = None 
+    turn_just_ended = True	
+        
+    break
+  elif areaLineBlue > line_threshold and not stop_Turn:
+    print("Detected")
+    stop_Turn = True
+    pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "CW", 1.5, pwm)
+    servo_angle_queue.put(30)
+    pwm.Drive(DC_MOTOR_PWM1, 0.6 , "CW", pwm)
+  else:
+    pass
+    
+if track_Dir == "CW":
+  if areaRight > 1:
+    park_DIR = "RIGHT"
+    pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)
+    turn_End = True
+    print("Turn Done)")
+    track_Dir = None 
+    turn_just_ended = True	
+        
+    break
+  elif areaLineOrange > line_threshold and not stop_Turn:
+    print("Detected")
+    stop_Turn = True
+    pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "CW", 1.5, pwm)
+    servo_angle_queue.put(-30)
+    pwm.Drive(DC_MOTOR_PWM1, 0.6 , "CW", pwm)
+  else:
+    pass
+
+
+  
+time.sleep(1.0)	
+servo_angle_queue.put(0)
+```
+
+###### 3) Parking
+
+The rest is entirely hardcoded.
+
+Boiling it down to the basics in Layman's terms, an if statement detects which direction ```python park_Dir``` is, ```python "LEFT"``` or ```python "RIGHT"```. If ```python "LEFT"``` is set, the robot goes forwards for two seconds at 60% speed, straight into the wall to align it, before backing up for one second at 60% speed. Next, the robot goes moves the steering to the left (-25) before reversing to turn for 1.2 seconds at sixty percent speed. We then put the servo to a minute turn at (1) and go forwards for 5.35 seconds at sixty percent speed. Now, to enter the parking spot, the robot goes into full left steering lock (-30), goes back for 2.4 seconds at sixty percent speed and proceeds to stop inside the parking spot, parallel to the wall and aligned with the correct track direction.
+
+```python
+if park_DIR == "LEFT":				
+
+  pwm.Drive_time(DC_MOTOR_PWM1, 0.6, "CW", 2.0, pwm)
+
+  pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)	
+    
+  pwm.Drive_time(DC_MOTOR_PWM1, 1.0, "CCW", 0.2, pwm)
+  
+  pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)	
+  
+
+  
+  pwm.Drive_time(DC_MOTOR_PWM1, 0.6, "CCW", 1.0, pwm)
+  
+  pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)	
+
+  
+  servo_angle_queue.put(-25)
+  
+  pwm.Drive_time(DC_MOTOR_PWM1, 0.6, "CCW", 1.2, pwm)
+
+
+  
+  pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)	
+
+  servo_angle_queue.put(1)
+
+
+  pwm.Drive_time(DC_MOTOR_PWM1, 0.6, "CW", 5.35, pwm)
+
+  pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)		
+
+  servo_angle_queue.put(-30)
+
+  pwm.Drive_time(DC_MOTOR_PWM1, 0.6, "CCW", 2.4, pwm)	
+  
+  pwm.Drive(DC_MOTOR_PWM1, 0.45, "Stop", pwm)
+
+  
+  park_DIR = None		
+```
+
+The opposite steering occurs if ```python park_Dir``` is ```python "RIGHT"```
+
 
 #### Flow Diagram - Obstacle Challenge
 
