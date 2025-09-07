@@ -646,7 +646,7 @@ if areaRightUPP >= 1 and areaRightUPP <= 8000:
     print(areaRightUPP)
 ```
 
-##### #3) Beginning Main Loop/Detecting Inital Loop
+###### 3) Beginning Main Loop/Detecting Inital Loop
 
 Finally, we start detecting obstacles. If the direction is counter clockwise and either a red obstacle or no obstacle is detected, we instruct the robot to go into full right steering lock (30), going fowards at half speed for one second before stopping the motor and breaking out of the loop for the main loop to commence. However, if a green obstacle is detected, the robot realigns the steering (0) to go forwards for one second at full speed and then turning at an angle of (15) towards the right for one second and full speed before breaking out of the loop.
 
