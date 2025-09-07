@@ -1,0 +1,1 @@
+This next edition makes steering a reality with an early adapter for the servo to original steering arm, which was a LEGO piece to keep it simple, as well as recieving an upgraded motor with a jump to 360 rpm to provide more power and speed.
