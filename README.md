@@ -601,14 +601,14 @@ Exiting the parking spot is a decievingly difficult task to complete, involving 
 
 Initial, we run simple scanning code for only one frame to detect on which side we detect the outer wall (if the right side detects black then counter clockwise orientation, if black detected on left side, then clockwise orientation.
 
-'''python
+```python
 if areaRight > areaLeft:
-'''
+```
 and subsequently:
 
-'''python
+```python
 elif areaLeft > areaRight:
-'''
+```
 
 ###### 2) Turning Out
 
