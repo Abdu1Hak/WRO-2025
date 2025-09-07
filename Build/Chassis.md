@@ -8,6 +8,9 @@ Features:
 
 Issues:
   - Overly basic and primitive, unfit for our needs.
+
+<img width="791" height="652" alt="image" src="https://github.com/Abdu1Hak/WRO-2025/blob/main/v-photos/V0.1/V0.0.png.jpg?raw=true" />
+
     
 ## V1.0
 Features:
@@ -20,6 +23,9 @@ Issues:
   - No room for servo to attach to.
   - Not enough room for Rasberry Pi and battery.
 
+<img width="791" height="652" alt="image" src="https://github.com/Abdu1Hak/WRO-2025/blob/main/v-photos/V1.0/V1.0.jpg?raw=true" />
+
+
 ## V1.1
 Fixes:
   - Cutout at rear designed to accomdate the lowering of the differential (Drive V0.1).
@@ -29,6 +35,12 @@ Fixes:
 Issues:
   - No room for servo wire.
 
+<img width="791" height="652" alt="image" src="https://github.com/Abdu1Hak/WRO-2025/blob/main/v-photos/V1.0/V1.0.jpg?raw=true" />
+
+<img width="791" height="652" alt="image" src="https://github.com/Abdu1Hak/WRO-2025/blob/main/v-photos/V1.1/V1.1(2).jpg?raw=true" />
+
+<img width="791" height="652" alt="image" src="https://github.com/Abdu1Hak/WRO-2025/blob/main/v-photos/V1.2/V1.2.jpg?raw=true" />
+
 ## V1.2
 Fixes:
   - Small cutout made within servo holder for servo wire.
@@ -36,6 +48,9 @@ Fixes:
     
 Issues:
   - N/A.
+
+<img width="791" height="652" alt="image" src="https://github.com/Abdu1Hak/WRO-2025/blob/main/v-photos/V1.4/V1.4(4).jpg?raw=true" />
+
 
 ## V1.3:
 Features:
