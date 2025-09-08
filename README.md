@@ -16,8 +16,11 @@
     
 > Coach
 - Vikramjeet Singh, singhvikramjeet557@gmail.com
-
-
+  - We would like to give a special thank you to our coach and mentor, Coach Vikram, who did a stellar job guiding and assisting us throughout the season. He inspired us, was available for help when we were completely stumped while giving us room to learn and grown, sharpening our problem-solving skills while expanding our respective knowledge bases. We could have not asked for a better coach!
+ 
+> Videoographer
+- Rishi:
+  - Finally, we would like to take this opportunity to thank one of our supporters and fellow member of our robotics organization, Rishi, who may not have been a part of our team, but did serve valiantly as our team videographer recording our competition videos uploaded to our channel. We wish him the best of luck in his entry to the WRO Future Innovators competition.
 
 ### Repository Contents
 
