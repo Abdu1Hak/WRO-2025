@@ -4,7 +4,6 @@
 
 [Camera.py](https://github.com/Abdu1Hak/WRO-2025/blob/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/src/Camera.py) is a code that simply opens the camera with editable ROIs that we use to test what the robot detects/sees.
 
-[Final_Open_Challenge.py](https://github.com/Abdu1Hak/WRO-2025/blob/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/src/Final_Open_Challenge.py) is our final code for the Open Challenge.
 
 [Get_Ranges.py](https://github.com/Abdu1Hak/WRO-2025/blob/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/src/Get_Ranges.py) is the code we run to detect and retrieve the Lab values from the game field for our robot to detect. It works by opening a live camera view and a seperate video feed with slider that help us to adjust and finalize the values.
 
