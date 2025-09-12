@@ -10,4 +10,4 @@
 
 [Parking.py](https://github.com/Abdu1Hak/WRO-2025/blob/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/src/Parking.py) is our current attempt to enter the parking spot at the end of our run. This is where we test before integrating it with our main code.
 
-[U-Open-Challenge.py](https://github.com/Abdu1Hak/WRO-2025/blob/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/src/U-Open-Challenge.py) is one of our backup Open Challenge code that we can revert back to if ever need be.
+[U-Open-Challenge.py](https://github.com/Abdu1Hak/WRO-2025/blob/dfc7f705017f9500a0f3fc7fe9a5bc044949d359/src/U-Open-Challenge.py) is the official open challenge code script that we will run in competition day
